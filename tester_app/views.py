@@ -52,7 +52,12 @@ def update_client(request, pk):
     if request.method == 'POST':
         form = ClientForm(request.POST, instance=client)
         if form.is_valid():
-            form.save()
+            client = form.save(commit=False)
+            client.province = smart_title(request.POST.get("province_name", ""))
+            client.regency = smart_title(request.POST.get("regency_name", ""))
+            client.district = smart_title(request.POST.get("district_name", ""))
+            client.village = smart_title(request.POST.get("village_name", ""))
+            client.save()
             return redirect('client_list')
     else:
         form = ClientForm(instance=client)
