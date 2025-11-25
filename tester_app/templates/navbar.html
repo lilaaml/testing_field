@@ -1,0 +1,14 @@
+<ul class="nav justify-content-center">
+  <li class="nav-item">
+    <a href="{% url 'home' %}" class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">Home</a>
+  </li>
+  <li class="nav-item">
+    <a href="{% url 'create_client' %}" class="nav-link {% if request.resolver_match.url_name == 'create_client' %}active{% endif %}">Client Form</a>
+  </li>
+  <li class="nav-item">
+    <a href="{% url 'client_list' %}" class="nav-link {% if request.resolver_match.url_name == 'client_list' %}active{% endif %}">Client List</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="#">Link</a>
+  </li>
+</ul>

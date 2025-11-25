@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Clients</h2>
+    <a href="{% url 'create_client' %}" class="btn btn-primary">
+        <i class="bi bi-plus-lg"></i> Add New Client
+    </a>
+</div>
+
+{% if clients %}
+    <div class="table-responsive">
+        <table class="table table-striped align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th>Name</th>
+                    <th>Address</th>
+                    <th>Products</th>
+                    <th class="text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for client in clients %}
+                    <tr>
+                        <td>{{ client.name }}</td>
+
+                        <td>
+                            {{ client.street }}<br>
+                            {{ client.village }}, {{ client.district }}<br>
+                            {{ client.regency }}, {{ client.province }}
+                        </td>
+
+                        <td>
+                            {% if client.products %}
+                                {% for product in client.products %}
+                                    <span class="badge bg-secondary me-1">{{ product }}</span>
+                                {% endfor %}
+                            {% else %}
+                                <small class="text-muted">No products listed</small>
+                            {% endif %}
+                        </td>
+
+                        <td class="text-center">
+                            <a href="" class="btn btn-sm btn-outline-primary me-1">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <a href="" 
+                               class="btn btn-sm btn-outline-danger"
+                               onclick="return confirm('Delete this client?');">
+                               <i class="bi bi-trash"></i>
+                            </a>
+                        </td>
+
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+{% else %}
+    <p class="text-muted">No clients recorded yet.</p>
+{% endif %}
+
+</div>
+
+{% endblock %}

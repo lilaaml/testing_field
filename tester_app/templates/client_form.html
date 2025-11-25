@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<form method="POST" class="my-3">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    
+    <div class="mb-3">
+        {{ form.name.label_tag }}
+        {{ form.name }}
+    </div>
+    <div class="mb-3">
+        {{ form.street.label_tag }}
+        {{ form.street }}
+    </div>
+    <div class="mb-3">
+        {{ form.province.label_tag }}
+        {{ form.province }}
+    </div>
+    <div class="mb-3">
+        {{ form.regency.label_tag }}
+        {{ form.regency }}
+    </div>
+    <div class="mb-3">
+        {{ form.district.label_tag }}
+        {{ form.district }}
+    </div>
+    <div class="mb-3">
+        {{ form.village.label_tag }}
+        {{ form.village }}
+    </div>
+
+    <!-- This holds the final JSON array -->
+    {{ form.products_data }}
+
+    <h3 class="mt-4">Products</h3>
+    <div id="product-fields" class="d-flex flex-column gap-2">
+        <!-- Default one input -->
+        <div class="product-row d-flex gap-2">
+            <input type="text" class="product-input form-control" placeholder="Product">
+            <button type="button" class="btn btn-outline-danger delete-btn">
+                <i class="bi bi-trash"></i>
+            </button>
+        </div>
+    </div>
+
+    <button type="button" id="add-product" class="btn btn-outline-secondary mt-3">
+        <i class="bi bi-plus-lg"></i> Add another product
+    </button>
+
+    <!-- Error message display -->
+    <p id="product-error" class="text-danger mt-2 d-none"></p>
+
+    <div class="d-flex gap-2 mt-3">
+        <button type="submit" class="btn btn-primary flex-fill">Save</button>
+        <a href="#" class="btn btn-secondary flex-fill">Cancel</a>
+    </div>
+</form>
+
+<style>
+    /* Simple fade-in animation */
+    .fade-in {
+        animation: fadeIn 0.2s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-3px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+</style>
+
+<script>
+const wrapper = document.getElementById("product-fields");
+const addBtn = document.getElementById("add-product");
+const hiddenField = document.getElementById("id_products_data");
+const errorBox = document.getElementById("product-error");
+
+// Function to add a new row
+function addRow(value = "") {
+    const row = document.createElement("div");
+    row.className = "product-row input-group fade-in";
+
+    row.innerHTML = `
+        <input type="text" class="product-input form-control" placeholder="Product" value="${value}">
+        <button type="button" class="delete-btn btn btn-outline-danger">
+            <i class="bi bi-trash"></i>
+        </button>
+    `;
+
+    wrapper.appendChild(row);
+
+    // Delete handler
+    row.querySelector(".delete-btn").addEventListener("click", () => {
+        row.remove();
+    });
+}
+
+// Add row button
+addBtn.addEventListener("click", () => {
+    addRow();
+});
+
+// Form submit handler
+document.querySelector("form").addEventListener("submit", (e) => {
+    const inputs = document.querySelectorAll(".product-input");
+
+    const values = [];
+    let hasError = false;
+    const duplicateCheck = new Set();
+
+    inputs.forEach(input => {
+        input.classList.remove("is-invalid");
+        const val = input.value.trim();
+
+        // Empty value → error
+        if (val === "") {
+            input.classList.add("is-invalid");
+            hasError = true;
+        }
+
+        // Duplicate detection
+        if (duplicateCheck.has(val.toLowerCase())) {
+            input.classList.add("is-invalid");
+            hasError = true;
+        } else if (val !== "") {
+            duplicateCheck.add(val.toLowerCase());
+        }
+
+        if (val !== "") {
+            values.push(val);
+        }
+    });
+
+    if (hasError) {
+        e.preventDefault();
+        errorBox.classList.remove("d-none");
+        errorBox.textContent = "Fix errors: remove empty products and duplicates.";
+        return;
+    }
+
+    errorBox.classList.add("d-none");
+
+    hiddenField.value = JSON.stringify(values);
+});
+</script>
+
+{% endblock %}
