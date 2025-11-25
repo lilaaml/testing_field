@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% block content %}
 
-<form method="POST" class="my-3">
+<form id="clientForm" method="POST" class="my-3">
     {% csrf_token %}
     {{ form.non_field_errors }}
     
@@ -70,78 +70,203 @@
 </style>
 
 <script>
-const wrapper = document.getElementById("product-fields");
-const addBtn = document.getElementById("add-product");
-const hiddenField = document.getElementById("id_products_data");
-const errorBox = document.getElementById("product-error");
+    // ----- Address -----
+    const API_BASE = "/wilayah"; // using your Django proxy
+    const provinceSelect = document.getElementById("province");
+    const regencySelect = document.getElementById("regency");
+    const districtSelect = document.getElementById("district");
+    const villageSelect = document.getElementById("village");
 
-// Function to add a new row
-function addRow(value = "") {
-    const row = document.createElement("div");
-    row.className = "product-row input-group fade-in";
+    // --- Add hidden inputs for readable names ---
+    const form = document.getElementById("clientForm");
+    const hiddenProvince = document.createElement("input");
+    const hiddenRegency = document.createElement("input");
+    const hiddenDistrict = document.createElement("input");
+    const hiddenVillage = document.createElement("input");
 
-    row.innerHTML = `
-        <input type="text" class="product-input form-control" placeholder="Product" value="${value}">
-        <button type="button" class="delete-btn btn btn-outline-danger">
-            <i class="bi bi-trash"></i>
-        </button>
-    `;
+    hiddenProvince.type = hiddenRegency.type = hiddenDistrict.type = hiddenVillage.type = "hidden";
+    hiddenProvince.name = "province_name";
+    hiddenRegency.name = "regency_name";
+    hiddenDistrict.name = "district_name";
+    hiddenVillage.name = "village_name";
 
-    wrapper.appendChild(row);
+    form.appendChild(hiddenProvince);
+    form.appendChild(hiddenRegency);
+    form.appendChild(hiddenDistrict);
+    form.appendChild(hiddenVillage);
 
-    // Delete handler
-    row.querySelector(".delete-btn").addEventListener("click", () => {
-        row.remove();
+    // --- Initialize dropdowns ---
+    provinceSelect.innerHTML = '<option value="">Select Province</option>';
+    regencySelect.innerHTML = '<option value="">Select Regency</option>';
+    districtSelect.innerHTML = '<option value="">Select District</option>';
+    villageSelect.innerHTML = '<option value="">Select Village</option>';
+
+    // --- Load Provinces ---
+    fetch(`${API_BASE}/provinces.json`)
+        .then(res => res.json())
+        .then(data => {
+        data.forEach(province => {
+            const opt = document.createElement("option");
+            opt.value = province.id;  // keep ID for lookups
+            opt.textContent = province.name;
+            provinceSelect.appendChild(opt);
+        });
+        });
+
+    // --- Province change ---
+    provinceSelect.addEventListener("change", function () {
+        const provinceId = this.value;
+        const provinceName = this.options[this.selectedIndex].text;
+        hiddenProvince.value = provinceName;
+
+        regencySelect.innerHTML = '<option value="">Select Regency</option>';
+        districtSelect.innerHTML = '<option value="">Select District</option>';
+        villageSelect.innerHTML = '<option value="">Select Village</option>';
+        regencySelect.disabled = districtSelect.disabled = villageSelect.disabled = true;
+
+        if (!provinceId) return;
+
+        fetch(`${API_BASE}/regencies/${provinceId}.json`)
+        .then(res => res.json())
+        .then(data => {
+            data.forEach(regency => {
+            const opt = document.createElement("option");
+            opt.value = regency.id;
+            opt.textContent = regency.name;
+            regencySelect.appendChild(opt);
+            });
+            regencySelect.disabled = false;
+        });
     });
-}
 
-// Add row button
-addBtn.addEventListener("click", () => {
-    addRow();
-});
+    // --- Regency change ---
+    regencySelect.addEventListener("change", function () {
+        const regencyId = this.value;
+        const regencyName = this.options[this.selectedIndex].text;
+        hiddenRegency.value = regencyName;
 
-// Form submit handler
-document.querySelector("form").addEventListener("submit", (e) => {
-    const inputs = document.querySelectorAll(".product-input");
+        districtSelect.innerHTML = '<option value="">Select District</option>';
+        villageSelect.innerHTML = '<option value="">Select Village</option>';
+        districtSelect.disabled = villageSelect.disabled = true;
 
-    const values = [];
-    let hasError = false;
-    const duplicateCheck = new Set();
+        if (!regencyId) return;
 
-    inputs.forEach(input => {
-        input.classList.remove("is-invalid");
-        const val = input.value.trim();
-
-        // Empty value → error
-        if (val === "") {
-            input.classList.add("is-invalid");
-            hasError = true;
-        }
-
-        // Duplicate detection
-        if (duplicateCheck.has(val.toLowerCase())) {
-            input.classList.add("is-invalid");
-            hasError = true;
-        } else if (val !== "") {
-            duplicateCheck.add(val.toLowerCase());
-        }
-
-        if (val !== "") {
-            values.push(val);
-        }
+        fetch(`${API_BASE}/districts/${regencyId}.json`)
+        .then(res => res.json())
+        .then(data => {
+            data.forEach(district => {
+            const opt = document.createElement("option");
+            opt.value = district.id;
+            opt.textContent = district.name;
+            districtSelect.appendChild(opt);
+            });
+            districtSelect.disabled = false;
+        });
     });
 
-    if (hasError) {
-        e.preventDefault();
-        errorBox.classList.remove("d-none");
-        errorBox.textContent = "Fix errors: remove empty products and duplicates.";
-        return;
+    // --- District change ---
+    districtSelect.addEventListener("change", function () {
+        const districtId = this.value;
+        const districtName = this.options[this.selectedIndex].text;
+        hiddenDistrict.value = districtName;
+
+        villageSelect.innerHTML = '<option value="">Select Village</option>';
+        villageSelect.disabled = true;
+
+        if (!districtId) return;
+
+        fetch(`${API_BASE}/villages/${districtId}.json`)
+        .then(res => res.json())
+        .then(data => {
+            data.forEach(village => {
+            const opt = document.createElement("option");
+            opt.value = village.name; // final one can be name directly
+            opt.textContent = village.name;
+            villageSelect.appendChild(opt);
+            });
+            villageSelect.disabled = false;
+        });
+    });
+
+    // --- Village change ---
+    villageSelect.addEventListener("change", function () {
+        const villageName = this.options[this.selectedIndex].text;
+        hiddenVillage.value = villageName;
+    });
+
+    // ----- Products -----
+    const wrapper = document.getElementById("product-fields");
+    const addBtn = document.getElementById("add-product");
+    const hiddenField = document.getElementById("id_products_data");
+    const errorBox = document.getElementById("product-error");
+
+    // Function to add a new row
+    function addRow(value = "") {
+        const row = document.createElement("div");
+        row.className = "product-row input-group fade-in";
+
+        row.innerHTML = `
+            <input type="text" class="product-input form-control" placeholder="Product" value="${value}">
+            <button type="button" class="delete-btn btn btn-outline-danger">
+                <i class="bi bi-trash"></i>
+            </button>
+        `;
+
+        wrapper.appendChild(row);
+
+        // Delete handler
+        row.querySelector(".delete-btn").addEventListener("click", () => {
+            row.remove();
+        });
     }
 
-    errorBox.classList.add("d-none");
+    // Add row button
+    addBtn.addEventListener("click", () => {
+        addRow();
+    });
 
-    hiddenField.value = JSON.stringify(values);
-});
+    // Form submit handler
+    document.querySelector("form").addEventListener("submit", (e) => {
+        const inputs = document.querySelectorAll(".product-input");
+
+        const values = [];
+        let hasError = false;
+        const duplicateCheck = new Set();
+
+        inputs.forEach(input => {
+            input.classList.remove("is-invalid");
+            const val = input.value.trim();
+
+            // Empty value → error
+            if (val === "") {
+                input.classList.add("is-invalid");
+                hasError = true;
+            }
+
+            // Duplicate detection
+            if (duplicateCheck.has(val.toLowerCase())) {
+                input.classList.add("is-invalid");
+                hasError = true;
+            } else if (val !== "") {
+                duplicateCheck.add(val.toLowerCase());
+            }
+
+            if (val !== "") {
+                values.push(val);
+            }
+        });
+
+        if (hasError) {
+            e.preventDefault();
+            errorBox.classList.remove("d-none");
+            errorBox.textContent = "Fix errors: remove empty products and duplicates.";
+            return;
+        }
+
+        errorBox.classList.add("d-none");
+
+        hiddenField.value = JSON.stringify(values);
+    });
 </script>
 
 {% endblock %}
