@@ -37,8 +37,30 @@ def create_client(request):
         form = ClientForm()
 
     client = Client.objects.all()
-    return render(request, 'client_form.html', {'form': form, 'client': client})
+    return render(request, 'client_form.html', {
+        'form': form, 
+        'client': client, 
+        'form_title': 'Add Client'
+    })
 
 def client_list(request):
     clients = Client.objects.all()
     return render(request, 'client_list.html', {'clients': clients})
+
+def update_client(request, pk):
+    client = get_object_or_404(Client, pk=pk)
+    if request.method == 'POST':
+        form = ClientForm(request.POST, instance=client)
+        if form.is_valid():
+            form.save()
+            return redirect('client_list')
+    else:
+        form = ClientForm(instance=client)
+    return render(request, 'client_form.html', {'form': form, 'form_title': 'Update Client'})
+
+def delete_client(request, pk):
+    client = get_object_or_404(Client, pk=pk)
+    if request.method == 'POST':
+        client.delete()
+        return redirect('client_list')
+    return render(request, 'client_confirm_delete.html', {'client': client})

@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% block content %}
 
+<h3 class="fw-bold">{{ form_title }}</h3>
 <form id="clientForm" method="POST" class="my-3">
     {% csrf_token %}
     {{ form.non_field_errors }}
@@ -53,7 +54,7 @@
 
     <div class="d-flex gap-2 mt-3">
         <button type="submit" class="btn btn-primary flex-fill">Save</button>
-        <a href="#" class="btn btn-secondary flex-fill">Cancel</a>
+        <a href="{% url 'client_list' %}" class="btn btn-secondary flex-fill">Cancel</a>
     </div>
 </form>
 

@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        <h2>Hapus Klien</h2>
+        <p>Apakah anda yakin ingin menghapus data <strong>{{ client }}</strong>?</p>
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">Ya, hapus</button>
+            <a href="{% url 'client_list' %}" class="btn btn-secondary">Batal</a>
+        </form>
+    </div>
+</div>
+{% endblock %}
