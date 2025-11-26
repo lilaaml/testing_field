@@ -39,7 +39,8 @@ class Proposal(models.Model):
     base_fee = models.PositiveIntegerField()  # report audit / report / audit
     assistance_fee = models.PositiveIntegerField()  # ipo assistance 
     ope_fee = models.PositiveIntegerField()  # out of pocket fee
-    sub_fee = models.PositiveIntegerField()  # subtotal fee 
+    sub_fee = models.PositiveIntegerField()  # base + assist + ope 
+    total_fee = models.PositiveIntegerField(null=True)  # sub * percentage
     num_termins = models.PositiveIntegerField()
     termin_values = models.JSONField()  # [50,50] [30,40,30] [25,25,25,25]
     total_percentage = models.FloatField()

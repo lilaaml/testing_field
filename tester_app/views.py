@@ -1,7 +1,7 @@
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib import messages
 
-from tester_app.forms import ClientForm
+from tester_app.forms import ClientForm, ProposalForm
 from tester_app.models import Client
 
 from .utils.formatting import smart_title
@@ -12,9 +12,29 @@ from django.http import JsonResponse
 def home(request):
     return render(request, 'home.html', {})
 
+
 # Proposal
 def create_proposal(request):
-    return render(request, 'proposal/proposal_form.html', {})
+    form = ProposalForm(request.POST)
+    if form.is_valid():
+
+        # Recalculate total fee server-side to ensure integrity
+        base_fee = int(form.cleaned_data['base_fee'])
+        assistance_fee = int(form.cleaned_data['assistance_fee'])
+        ope_fee = int(form.cleaned_data['ope_fee'])
+        percentages = form.cleaned_data['termin_values']
+        sub_fee = 0
+
+        for p in percentages:
+            subtotal = (base_fee + assistance_fee + ope_fee) * (p / 100)
+            sub_fee += subtotal
+
+            form.instance.sub_fee = int(sub_fee)
+            form.save()
+            return redirect('create_proposal')
+        
+    return render(request, 'proposal/proposal_form.html', {'form': form, 'form_title': 'Create Proposal'})
+
 
 # Client
 def wilayah_proxy(request, endpoint):

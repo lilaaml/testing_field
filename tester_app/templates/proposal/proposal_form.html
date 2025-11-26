@@ -1,10 +1,354 @@
 {% extends 'base.html' %}
 {% block content %}
 
-<div class="card">
-    <div class="card-body">
-        <h2 class="fw-bold">Proposal</h2>
+<h3 class="fw-bold">{{ form_title }}</h3>
+<form id="proposalForm" method="post" class="my-3">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+
+    <div class="mb-3">
+        {{ form.name.label_tag }}
+        {{ form.name }}
     </div>
-</div>
+    <div class="mb-3">
+        {{ form.audit_type.label_tag }}
+        {{ form.audit_type }}
+    </div>
+
+    <!-- Visible Fee Input -->
+    <div class="mb-3">
+        <label for="base_fee" class="form-label">Base Fee</label>
+        <input type="text" name="base_fee" id="base_fee_input" class="form-control" required>
+    </div>
+
+    <div class="mb-3">
+        <label for="assistance_fee" class="form-label">IPO Assistance Fee</label>
+        <input type="text" name="assistance_fee" id="assistance_fee_input" class="form-control">
+    </div>
+
+    <div class="mb-3">
+        <label for="ope_fee" class="form-label">Out of Pocket Expense</label>
+        <input type="text" name="ope_fee" id="ope_fee_input" class="form-control">
+    </div>
+
+    <!-- Hidden Fee Fields -->
+    {{ form.base_fee }}
+    {{ form.assistance_fee }}
+    {{ form.ope_fee }}
+
+    <!-- Visible Termin Input -->
+    <div class="mb-3">
+        <label class="form-label">Number of Termins</label>
+        <select id="termin-count" class="form-select" required>
+            <option value="">-- Select --</option>
+            <option value="2">2 Termins</option>
+            <option value="3">3 Termins</option>
+            <option value="4">4 Termins</option>
+        </select>
+    </div>
+
+    <!-- Hidden Termin Fields -->
+    {{ form.num_termins }}
+    {{ form.termin_values }}
+    {{ form.total_percentage }}
+    {{ form.sub_fee }}
+    {{ form.total_fee }}
+
+    <div id="termin-container" class="mb-3"></div>
+
+    <div id="sub-fee-display" class="mb-3"></div>
+
+    <div class="d-flex gap-2 mt-3">
+        <button type="submit" class="btn btn-primary flex-fill">Save</button>
+        <a href="#" class="btn btn-secondary flex-fill">Cancel</a>
+    </div>
+</form>
+
+<!-- Termin Options -->
+<script id="default-termin-opt" type="application/json">
+    {
+        "2": [50, 50],
+        "3": [30, 40, 30],
+        "4": [null, null, null, null]
+    }
+</script>
+
+<script>
+    const defaults = JSON.parse(document.getElementById("default-termin-opt").textContent);
+
+    const form = document.getElementById("terminForm");
+    const baseFeeVisible = document.getElementById("base_fee_input");
+    const assistanceFeeVisible = document.getElementById("assistance_fee_input");
+    const opeFeeVisible = document.getElementById("ope_fee_input");
+
+    const baseFeeHidden = document.getElementById("base_fee");
+    const assistanceFeeHidden = document.getElementById("assistance_fee");
+    const opeFeeHidden = document.getElementById("ope_fee");
+
+    const terminSelect = document.getElementById("termin-count");
+    const container = document.getElementById("termin-container");
+
+    const numTerminsHidden = document.getElementById("num_termins");
+    const terminValuesHidden = document.getElementById("termin_values");
+    const totalPercentageHidden = document.getElementById("total_percentage");
+    const subFeeHidden = document.getElementById("sub_fee");
+    const totalFeeHidden = document.getElementById("total_fee");
+
+    const idrFormatter = new Intl.NumberFormat("id-ID", {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+    });
+
+    let inputElements = [];
+    let totalDisplay;
+    let warning;
+
+    // Base Fee Input Handling
+    baseFeeVisible.addEventListener("input", () => {
+        let raw = baseFeeVisible.value.replace(/\D/g, "");
+        if (raw.length > 9) raw = raw.slice(0, 9);
+
+        baseFeeVisible.value = raw;
+        baseFeeHidden.value = raw;
+
+        updateCalculations();
+    });
+
+    baseFeeVisible.addEventListener("blur", () => {
+        let raw = baseFeeVisible.value.replace(/\D/g, "");
+        if (!raw) return;
+
+        let baseFee = parseInt(raw, 10);
+        if (baseFee > 1000000000) {
+            alert("Maximum is Rp 1.000.000.000");
+            baseFee = 1000000000;
+        }
+
+        baseFeeVisible.value = idrFormatter.format(baseFee);
+        baseFeeHidden.value = baseFee;
+
+        updateCalculations();
+    });
+
+    // Assistance Fee Input Handling
+    assistanceFeeVisible.addEventListener("input", () => {
+        let raw = assistanceFeeVisible.value.replace(/\D/g, "");
+        if (raw.length > 9) raw = raw.slice(0, 9);
+
+        assistanceFeeVisible.value = raw;
+        assistanceFeeHidden.value = raw;
+
+        updateCalculations();
+    });
+    
+    assistanceFeeVisible.addEventListener("blur", () => {
+        let raw = assistanceFeeVisible.value.replace(/\D/g, "");
+        if (!raw) return;
+
+        let assistanceFee = parseInt(raw, 10);
+        if (assistanceFee > 1000000000) {
+            alert("Maximum is Rp 1.000.000.000");
+            assistanceFee = 1000000000;
+        }
+
+        assistanceFeeVisible.value = idrFormatter.format(assistanceFee);
+        assistanceFeeHidden.value = assistanceFee;
+
+        updateCalculations();
+    });
+
+    // OPE Fee Input Handling
+    opeFeeVisible.addEventListener("input", () => {
+        let raw = opeFeeVisible.value.replace(/\D/g, "");
+        if (raw.length > 9) raw = raw.slice(0, 9);
+
+        opeFeeVisible.value = raw;
+        opeFeeHidden.value = raw;
+
+        updateCalculations();
+    });
+    
+    opeFeeVisible.addEventListener("blur", () => {
+        let raw = opeFeeVisible.value.replace(/\D/g, "");
+        if (!raw) return;
+
+        let opeFee = parseInt(raw, 10);
+        if (opeFee > 1000000000) {
+            alert("Maximum is Rp 1.000.000.000");
+            opeFee = 1000000000;
+        }
+
+        opeFeeVisible.value = idrFormatter.format(opeFee);
+        opeFeeHidden.value = opeFee;
+
+        updateCalculations();
+    });
+
+    // Termin Table
+    terminSelect.addEventListener("change", () => {
+        const num = parseInt(terminSelect.value);
+        container.innerHTML = "";
+        inputElements = [];
+
+        if (!num) {
+            numTerminsHidden.value = "";
+            return;
+        }
+
+        numTerminsHidden.value = num;
+        const values = defaults[num];
+
+        totalDisplay = document.createElement("p");
+        totalDisplay.classList.add("fw-bold", "mt-3");
+        totalDisplay.textContent = "Total: 0%";
+
+        warning = document.createElement("div");
+        warning.classList.add("alert", "alert-warning", "mt-2");
+        warning.style.display = "none";
+
+        container.appendChild(totalDisplay);
+
+        const table = document.createElement("table");
+        table.classList.add("table", "table-bordered", "text-center", "termin-table", "mt-2");
+
+        table.innerHTML = `
+            <thead class="table-primary">
+                <tr>
+                    <th>Termins<th>
+                    <th>%<th>
+                    <th>Base Fee<th>
+                    <th>IPO Assistance Fee<th>
+                    <th>OPE Fee<th>
+                    <th>Subtotal<th>
+                    <th>Total<th>
+                </tr>
+            </thead>
+        `;
+
+        const tbody = document.createElement("tbody");
+
+        values.forEach((v, i) => {
+            const tr = document.createElement("tr");
+
+            const nameCell = `<td class="fw-semibold">Termin ${i+1}</td>`;
+
+            const percentInput = document.createElement("input");
+            percentInput.type = "number";
+            percentInput.classList.add("form-control", "text-center");
+            percentInput.style.maxWidth = "120px";
+            percentInput.value = v ?? "";
+            percentInput.placeholder = v ?? "Custom";
+
+            const percentCell = document.createElement("td");
+            percentCell.appendChild(percentInput);
+
+            const baseFeeCell = document.createElement("td");
+            const assistanceFeeCell = document.createElement("td");
+            const opeFeeCell = document.createElement("td");
+            const subFeeCell = document.createElement("td");
+            const totalFeeCell = document.createElement("td");
+
+            baseFeeCell.textContent = "Rp 0";
+            assistanceFeeCell.textContent = "Rp 0";
+            opeFeeCell.textContent = "Rp 0";
+            subFeeCell.textContent = "Rp 0";
+            totalFeeCell.textContent = "Rp 0";
+
+            tr.innerHTML = nameCell;
+            tr.appendChild(percentCell);
+            tr.appendChild(baseFeeCell);
+            tr.appendChild(assistanceFeeCell);
+            tr.appendChild(opeFeeCell);
+            tr.appendChild(subFeeCell);
+            tr.appendChild(totalFeeCell);
+
+            tbody.appendChild(tr);
+
+            inputElements.push({ input: percentInput, baseFeeCell, assistanceFeeCell, opeFeeCell, subFeeCell, totalFeeCell });
+
+            percentInput.addEventListener("input", () => {
+                updateTotals();
+                updateCalculations();
+            })
+
+        });
+    });
+
+    // Percent Total Calculator
+    function updateTotals() {
+        const toal = inputElements.reduce((sum, el) => sum + Number(el.input.value || 0), 0);
+
+        totalDisplay.textContent = `Total: ${total}%`;
+        terminValuesHidden.value = JSON.stringify(inputElements.map(el => Number(el.input.value || 0)));
+        totalPercentageHidden.value = total;
+
+        if (total > 100) {
+            warning.textContent = "Persentase tidak bisa melebihi 100%";
+            warning.style.display = "block";
+            totalDisplay.style.color = "red";
+        } else if (total < 100) {
+            warning.textContent = "Persentase harus mencapai 100%";
+            warning.style.display = "block";
+            totalDisplay.style.color = "orange";
+        } else {
+            warning.style.display = "none";
+            totalDisplay.style.color = "black";
+        }
+    }
+
+    // Fee Calculation
+    function updateCalculations() {
+        const baseFee = parseInt(baseFeeHidden.value || 0);
+        const assistanceFee = parseInt(assistanceFeeHidden.value || 0);
+        const opeFee = parseInt(opeFeeHidden.value || 0);
+        const total = parseInt(totalPercentageHidden.value || 0);
+
+        if(!baseFee || total !== 100) {
+            inputElements.forEach(el => {
+                el.baseFeeCell.textContent = "Rp 0";
+                el.assistanceFeeCell.textContent = "Rp 0";
+                el.opeFeeCell.textContent = "Rp 0";
+                el.subFeeCell.textContent = "Rp 0";
+                el.totalFeeCell.textContent = "Rp 0";
+            });
+            totalFeeHidden.value = 0;
+            return;
+        }
+
+        let finalTotal = 0;
+
+        inputElements.forEach(el => {
+            const percent = Number(el.input.value || 0);
+            const sub = baseFee + assistanceFee + opeFee;
+            const total = sub * (percent / 100);
+
+            el.subFeeCell.textContent = "Rp " + idrFormatter.format(sub);
+            el.totalFeeCell.textContent = "Rp " + idrFormatter.format(total);
+
+            finalTotal += total;
+        });
+
+        totalFeeHidden.value = Math.round(finalTotal);
+    }
+
+    // Submit Validation
+    form.addEventListener("submit", e => {
+        const base = baseFeeHidden.value;
+        const total = totalFeeHidden.value;
+
+        if (!base) {
+            e.preventDefault();
+            alert("Please enter a valid base fee");
+            return;
+        }
+
+        if (total != 100) {
+            e.preventDefault();
+            alert("Total percentage must be exactly 100%");
+            return;
+        }
+    });
+
+</script>
 
 {% endblock %}

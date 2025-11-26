@@ -1,5 +1,5 @@
 from django import forms
-from .models import Client
+from .models import Client, Proposal
 import json
 
 class ClientForm(forms.ModelForm):
@@ -58,3 +58,56 @@ class ClientForm(forms.ModelForm):
         return instance
 
         
+class ProposalForm(forms.ModelForm):
+    class Meta:
+        model = Proposal
+        fields = ['client', 'audit_type', 'fiscal_year_end', 'base_fee', 'assistance_fee', 'ope_fee', 'sub_fee', 'total_fee', 'num_termins', 'termin_values', 'total_percentage']
+
+        widgets = {
+            'client': forms.TextInput(attrs={
+                'id': 'client',
+                'class': 'form-control',
+            }),
+            'audit_type': forms.Select(attrs={
+                'id': 'audit_type',
+                'class': 'form-control',
+            }),
+            'base_fee': forms.HiddenInput(attrs={
+                'id': 'base_fee',
+                'class': 'form-control',
+            }),
+            'assistance_fee': forms.HiddenInput(attrs={
+                'id': 'assistance_fee',
+                'class': 'form-control',
+            }),
+            'ope_fee': forms.HiddenInput(attrs={
+                'id': 'ope_fee',
+                'class': 'form-control',
+            }),
+            'sub_fee': forms.HiddenInput(attrs={
+                'id': 'sub_fee',
+                'class': 'form-control',
+            }),
+            'total_fee': forms.HiddenInput(attrs={
+                'id': 'total_fee',
+                'class': 'form-control',
+            }),
+            'num_termins': forms.HiddenInput(attrs={
+                'id': 'num_termins',
+                'class': 'form-control',
+            }),
+            'termin_values': forms.HiddenInput(attrs={
+                'id': 'termin_values',
+                'class': 'form-control',
+            }),
+            'total_percentage': forms.HiddenInput(attrs={
+                'id': 'total_percentage',
+                'class': 'form-control',
+            }),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super(ProposalForm, self).__init__(*args, **kwargs)
+        # Optional: Add custom CSS classes or placeholders
+        self.fields['base_fee'].help_text = '<span class="form-text text-muted"><small>Contoh: 500.000.000</small></span>'
+
