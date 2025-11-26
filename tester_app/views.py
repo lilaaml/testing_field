@@ -11,7 +11,11 @@ from django.http import JsonResponse
 # General
 def home(request):
     return render(request, 'home.html', {})
-    
+
+# Proposal
+def create_proposal(request):
+    return render(request, 'proposal/proposal_form.html', {})
+
 # Client
 def wilayah_proxy(request, endpoint):
     url = f"https://emsifa.github.io/api-wilayah-indonesia/api/{endpoint}"
@@ -37,7 +41,7 @@ def create_client(request):
         form = ClientForm()
 
     client = Client.objects.all()
-    return render(request, 'client_form.html', {
+    return render(request, 'client/client_form.html', {
         'form': form, 
         'client': client, 
         'form_title': 'Add Client'
@@ -45,7 +49,7 @@ def create_client(request):
 
 def client_list(request):
     clients = Client.objects.all()
-    return render(request, 'client_list.html', {'clients': clients})
+    return render(request, 'client/client_list.html', {'clients': clients})
 
 def update_client(request, pk):
     client = get_object_or_404(Client, pk=pk)
@@ -61,11 +65,11 @@ def update_client(request, pk):
             return redirect('client_list')
     else:
         form = ClientForm(instance=client)
-    return render(request, 'client_form.html', {'form': form, 'form_title': 'Update Client'})
+    return render(request, 'client/client_form.html', {'form': form, 'form_title': 'Update Client'})
 
 def delete_client(request, pk):
     client = get_object_or_404(Client, pk=pk)
     if request.method == 'POST':
         client.delete()
         return redirect('client_list')
-    return render(request, 'client_confirm_delete.html', {'client': client})
+    return render(request, 'client/client_confirm_delete.html', {'client': client})

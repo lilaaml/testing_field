@@ -16,3 +16,35 @@ class Client(models.Model):
 
     def __str__(self):
         return f"{ self.name }"
+    
+
+class Proposal(models.Model):
+    proposal_id = models.CharField(max_length=255)
+    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name="proposal")
+    audit_type = models.CharField(
+        max_length=255,
+        choices=[
+            ('Tahunan', 'Tahunan'),
+            ('IPO', 'IPO'),
+            ('Interim - Audit', 'Interim - Audit'),
+            ('Interim - Review', 'Interim - Review'),
+            ('Non-Audit Umum', 'Non-Audit Umum'),
+        ]
+    )
+    fiscal_year_end = ArrayField(
+        models.DateField(),
+        default=list,
+        blank=True
+    )
+    base_fee = models.PositiveIntegerField()  # report audit / report / audit
+    assistance_fee = models.PositiveIntegerField()  # ipo assistance 
+    ope_fee = models.PositiveIntegerField()  # out of pocket fee
+    sub_fee = models.PositiveIntegerField()  # subtotal fee 
+    num_termins = models.PositiveIntegerField()
+    termin_values = models.JSONField()  # [50,50] [30,40,30] [25,25,25,25]
+    total_percentage = models.FloatField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    modified_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{ self.proposal_id }"

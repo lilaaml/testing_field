@@ -4,6 +4,8 @@ from . import views
 urlpatterns = [
     # General
     path('', views.home, name='home'),
+    # Proposal
+    path('create-proposal/', views.create_proposal, name='create_proposal'),
     # Client
     path('wilayah/<path:endpoint>', views.wilayah_proxy, name='wilayah_proxy'),
     path('create-client/', views.create_client, name='create_client'),
