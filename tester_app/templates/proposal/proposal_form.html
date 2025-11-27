@@ -51,8 +51,8 @@
     {{ form.num_termins }}
     {{ form.termin_values }}
     {{ form.total_percentage }}
-    {{ form.sub_fee }}
     {{ form.total_fee }}
+    {{ form.termin_fee }}
 
     <div id="termin-container" class="mb-3"></div>
 
@@ -91,8 +91,8 @@
     const numTerminsHidden = document.getElementById("num_termins");
     const terminValuesHidden = document.getElementById("termin_values");
     const totalPercentageHidden = document.getElementById("total_percentage");
-    const subFeeHidden = document.getElementById("sub_fee");
     const totalFeeHidden = document.getElementById("total_fee");
+    const terminFeeHidden = document.getElementById("termin_fee");
 
     const idrFormatter = new Intl.NumberFormat("id-ID", {
         minimumFractionDigits: 0,
@@ -239,20 +239,20 @@
             const percentCell = document.createElement("td");
             percentCell.appendChild(percentInput);
 
-            const subFeeCell = document.createElement("td");
             const totalFeeCell = document.createElement("td");
+            const terminFeeCell = document.createElement("td");
 
-            subFeeCell.textContent = "Rp 0";
             totalFeeCell.textContent = "Rp 0";
+            terminFeeCell.textContent = "Rp 0";
 
             tr.innerHTML = nameCell;
             tr.appendChild(percentCell);
-            tr.appendChild(subFeeCell);
             tr.appendChild(totalFeeCell);
+            tr.appendChild(terminFeeCell);
 
             tbody.appendChild(tr);
 
-            inputElements.push({ input: percentInput, subFeeCell, totalFeeCell });
+            inputElements.push({ input: percentInput, totalFeeCell, terminFeeCell });
 
             percentInput.addEventListener("input", () => {
                 updateTotals();
@@ -299,7 +299,7 @@
 
         if(!baseFee || total !== 100) {
             inputElements.forEach(el => {
-                el.subFeeCell.textContent = "Rp 0";
+                el.totalFeeCell.textContent = "Rp 0";
             })
         }
 
@@ -310,19 +310,19 @@
             const sub = baseFee + assistanceFee + opeFee;
             const total = sub * (percent / 100);
 
-            el.subFeeCell.textContent = "Rp " + idrFormatter.format(sub);
-            el.totalFeeCell.textContent = "Rp " + idrFormatter.format(total);
+            el.totalFeeCell.textContent = "Rp " + idrFormatter.format(sub);
+            el.terminFeeCell.textContent = "Rp " + idrFormatter.format(total);
 
             finalTotal += total;
         });
 
-        totalFeeHidden.value = Math.round(finalTotal);
+        terminFeeHidden.value = Math.round(finalTotal);
     }
 
     // Submit Validation
     form.addEventListener("submit", e => {
         const base = baseFeeHidden.value;
-        const total = totalFeeHidden.value;
+        const total = terminFeeHidden.value.value;
 
         if (!base) {
             e.preventDefault();
