@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Proposals</h2>
+    <a href="{% url 'create_proposal' %}" class="btn btn-primary">
+        <i class="bi bi-plus-lg"></i> Add New Proposal
+    </a>
+</div>
+
+{% if proposals %}
+    <div class="table-responsive">
+        <table class="table table-striped align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th>Client</th>
+                    <th>Audit Type</th>
+                    <th>Fiscal Year End</th>
+                    <th class="text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for proposal in proposals %}
+                    <tr>
+                        <td>{{ proposal.client }}</td>
+                        <td>{{ proposal.audit_type }}</td>
+                        <td>{{ proposal.fiscal_year_end }}</td>
+
+                        <td class="text-center">
+                            <a href="{% url 'update_proposal' proposal.id %}" class="btn btn-sm btn-outline-primary me-1">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <a href="#" 
+                               class="btn btn-sm btn-outline-danger">
+                               <i class="bi bi-trash"></i>
+                            </a>
+                        </td>
+
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+{% else %}
+    <p class="text-muted">No proposals recorded yet.</p>
+{% endif %}
+
+</div>
+
+{% endblock %}

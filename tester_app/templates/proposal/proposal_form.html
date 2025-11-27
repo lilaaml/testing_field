@@ -7,8 +7,8 @@
     {{ form.non_field_errors }}
 
     <div class="mb-3">
-        {{ form.name.label_tag }}
-        {{ form.name }}
+        {{ form.client.label_tag }}
+        {{ form.client }}
     </div>
     <div class="mb-3">
         {{ form.audit_type.label_tag }}
@@ -60,7 +60,7 @@
 
     <div class="d-flex gap-2 mt-3">
         <button type="submit" class="btn btn-primary flex-fill">Save</button>
-        <a href="#" class="btn btn-secondary flex-fill">Cancel</a>
+        <a href="{% url 'proposal_list' %}" class="btn btn-secondary flex-fill">Cancel</a>
     </div>
 </form>
 
@@ -322,7 +322,7 @@
     // Submit Validation
     form.addEventListener("submit", e => {
         const base = baseFeeHidden.value;
-        const total = terminFeeHidden.value.value;
+        const total = totalPercentageHidden.value;
 
         if (!base) {
             e.preventDefault();

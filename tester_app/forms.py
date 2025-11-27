@@ -64,9 +64,9 @@ class ProposalForm(forms.ModelForm):
         fields = ['client', 'audit_type', 'fiscal_year_end', 'base_fee', 'assistance_fee', 'ope_fee', 'total_fee', 'termin_fee', 'num_termins', 'termin_values', 'total_percentage']
 
         widgets = {
-            'client': forms.TextInput(attrs={
+            'client': forms.Select(attrs={
                 'id': 'client',
-                'class': 'form-control',
+                'class': 'form-select',
             }),
             'audit_type': forms.Select(attrs={
                 'id': 'audit_type',

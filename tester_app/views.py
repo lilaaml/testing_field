@@ -2,11 +2,12 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib import messages
 
 from tester_app.forms import ClientForm, ProposalForm
-from tester_app.models import Client
+from tester_app.models import Client, Proposal
 
 from .utils.formatting import smart_title
 import requests
 from django.http import JsonResponse
+import json
 
 # General
 def home(request):
@@ -14,26 +15,81 @@ def home(request):
 
 
 # Proposal
-def create_proposal(request):
-    form = ProposalForm(request.POST)
-    if form.is_valid():
+def update_proposal(request, pk):
+    proposal = get_object_or_404(Proposal, pk=pk)
 
-        # Recalculate total fee server-side to ensure integrity
-        base_fee = int(form.cleaned_data['base_fee'])
-        assistance_fee = int(form.cleaned_data['assistance_fee'])
-        ope_fee = int(form.cleaned_data['ope_fee'])
-        percentages = form.cleaned_data['termin_values']
-        sub_fee = 0
+    if request.method == "POST":
+        form = ProposalForm(request.POST, instance=proposal)
 
-        for p in percentages:
-            subtotal = (base_fee + assistance_fee + ope_fee) * (p / 100)
-            sub_fee += subtotal
+        if form.is_valid():
 
-            form.instance.sub_fee = int(sub_fee)
+            base_fee = int(form.cleaned_data['base_fee'])
+            assistance_fee = int(form.cleaned_data['assistance_fee'])
+            ope_fee = int(form.cleaned_data['ope_fee'])
+
+            # termin_values comes from a hidden field — JSON string
+            percentages = form.cleaned_data['termin_values']
+
+            # decode JSON array if needed
+            if isinstance(percentages, str):
+                try:
+                    percentages = json.loads(percentages)
+                except json.JSONDecodeError:
+                    percentages = []
+
+            total_fee = 0
+            for p in percentages:
+                subtotal = (base_fee + assistance_fee + ope_fee) * (p / 100)
+                total_fee += subtotal
+
+            # assign the final computed result
+            form.instance.total_fee = int(total_fee)
+
+            # save once only
             form.save()
-            return redirect('create_proposal')
+
+            return redirect("proposal_list")
+
+    else:
+        form = ProposalForm(instance=proposal)
+
+    return render(request, 'proposal/proposal_form.html', {'form': form, 'form_title': 'Update Proposal'})
+
+def create_proposal(request):
+    if request.method == "POST":
+        form = ProposalForm(request.POST)
+        
+        if form.is_valid():
+
+            # Recalculate total fee server-side to ensure integrity
+            base_fee = int(form.cleaned_data['base_fee'])
+            assistance_fee = int(form.cleaned_data['assistance_fee'])
+            ope_fee = int(form.cleaned_data['ope_fee'])
+
+            percentages = form.cleaned_data['termin_values']
+            if isinstance(percentages, str):
+                percentages = json.loads(percentages)
+
+            total_fee = 0
+            for p in percentages:
+                subtotal = (base_fee + assistance_fee + ope_fee) * (p / 100)
+                total_fee += subtotal
+
+            form.instance.total_fee = int(total_fee)
+            form.save()
+            
+            return redirect('proposal_list')
+    
+    else:
+        form = ProposalForm()
+
+    print(form.errors)
         
     return render(request, 'proposal/proposal_form.html', {'form': form, 'form_title': 'Create Proposal'})
+
+def proposal_list(request):
+    proposals = Proposal.objects.all()
+    return render(request, 'proposal/proposal_list.html', {'proposals': proposals})
 
 
 # Client

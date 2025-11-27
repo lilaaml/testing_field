@@ -5,7 +5,9 @@ urlpatterns = [
     # General
     path('', views.home, name='home'),
     # Proposal
+    path('proposal/<int:pk>/update', views.update_proposal, name='update_proposal'),
     path('create-proposal/', views.create_proposal, name='create_proposal'),
+    path('proposal-list/', views.proposal_list, name='proposal_list'),
     # Client
     path('wilayah/<path:endpoint>', views.wilayah_proxy, name='wilayah_proxy'),
     path('create-client/', views.create_client, name='create_client'),
