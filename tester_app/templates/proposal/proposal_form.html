@@ -76,7 +76,7 @@
 <script>
     const defaults = JSON.parse(document.getElementById("default-termin-opt").textContent);
 
-    const form = document.getElementById("terminForm");
+    const form = document.getElementById("proposalForm");
     const baseFeeVisible = document.getElementById("base_fee_input");
     const assistanceFeeVisible = document.getElementById("assistance_fee_input");
     const opeFeeVisible = document.getElementById("ope_fee_input");
@@ -214,13 +214,10 @@
         table.innerHTML = `
             <thead class="table-primary">
                 <tr>
-                    <th>Termins<th>
-                    <th>%<th>
-                    <th>Base Fee<th>
-                    <th>IPO Assistance Fee<th>
-                    <th>OPE Fee<th>
-                    <th>Subtotal<th>
-                    <th>Total<th>
+                    <th>Termins</th>
+                    <th>%</th>
+                    <th>Total</th>
+                    <th>Per Termin</th>
                 </tr>
             </thead>
         `;
@@ -234,49 +231,46 @@
 
             const percentInput = document.createElement("input");
             percentInput.type = "number";
-            percentInput.classList.add("form-control", "text-center");
-            percentInput.style.maxWidth = "120px";
+            percentInput.classList.add("form-control", "text-center", "mx-auto");
+            percentInput.style.maxWidth = "90px";
             percentInput.value = v ?? "";
             percentInput.placeholder = v ?? "Custom";
 
             const percentCell = document.createElement("td");
             percentCell.appendChild(percentInput);
 
-            const baseFeeCell = document.createElement("td");
-            const assistanceFeeCell = document.createElement("td");
-            const opeFeeCell = document.createElement("td");
             const subFeeCell = document.createElement("td");
             const totalFeeCell = document.createElement("td");
 
-            baseFeeCell.textContent = "Rp 0";
-            assistanceFeeCell.textContent = "Rp 0";
-            opeFeeCell.textContent = "Rp 0";
             subFeeCell.textContent = "Rp 0";
             totalFeeCell.textContent = "Rp 0";
 
             tr.innerHTML = nameCell;
             tr.appendChild(percentCell);
-            tr.appendChild(baseFeeCell);
-            tr.appendChild(assistanceFeeCell);
-            tr.appendChild(opeFeeCell);
             tr.appendChild(subFeeCell);
             tr.appendChild(totalFeeCell);
 
             tbody.appendChild(tr);
 
-            inputElements.push({ input: percentInput, baseFeeCell, assistanceFeeCell, opeFeeCell, subFeeCell, totalFeeCell });
+            inputElements.push({ input: percentInput, subFeeCell, totalFeeCell });
 
             percentInput.addEventListener("input", () => {
                 updateTotals();
                 updateCalculations();
-            })
-
+            });
         });
+
+        table.appendChild(tbody);
+        container.appendChild(table);
+        container.appendChild(warning);
+
+        updateTotals();
+        updateCalculations();
     });
 
     // Percent Total Calculator
     function updateTotals() {
-        const toal = inputElements.reduce((sum, el) => sum + Number(el.input.value || 0), 0);
+        const total = inputElements.reduce((sum, el) => sum + Number(el.input.value || 0), 0);
 
         totalDisplay.textContent = `Total: ${total}%`;
         terminValuesHidden.value = JSON.stringify(inputElements.map(el => Number(el.input.value || 0)));
@@ -305,14 +299,8 @@
 
         if(!baseFee || total !== 100) {
             inputElements.forEach(el => {
-                el.baseFeeCell.textContent = "Rp 0";
-                el.assistanceFeeCell.textContent = "Rp 0";
-                el.opeFeeCell.textContent = "Rp 0";
                 el.subFeeCell.textContent = "Rp 0";
-                el.totalFeeCell.textContent = "Rp 0";
-            });
-            totalFeeHidden.value = 0;
-            return;
+            })
         }
 
         let finalTotal = 0;
