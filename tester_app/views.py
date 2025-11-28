@@ -1,3 +1,4 @@
+import datetime
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib import messages
 
@@ -22,6 +23,26 @@ def update_proposal(request, pk):
         form = ProposalForm(request.POST, instance=proposal)
 
         if form.is_valid():
+
+            # 1. Get JSON string from hidden input
+            raw = form.cleaned_data.get("fiscal_year_end_data", "[]")
+
+            # 2. Convert JSON → Python list of strings
+            try:
+                date_strings = json.loads(raw)
+            except json.JSONDecodeError:
+                date_strings = []
+
+            # 3. Convert strings → actual Python date objects
+            converted_dates = []
+            for d in date_strings:
+                try:
+                    converted_dates.append(datetime.date.fromisoformat(d))
+                except Exception:
+                    pass  # ignore invalid dates
+
+            # 4. Assign to the model’s ArrayField
+            form.instance.fiscal_year_end = converted_dates
 
             base_fee = int(form.cleaned_data['base_fee'])
             assistance_fee = int(form.cleaned_data['assistance_fee'])
@@ -53,13 +74,41 @@ def update_proposal(request, pk):
     else:
         form = ProposalForm(instance=proposal)
 
-    return render(request, 'proposal/proposal_form.html', {'form': form, 'form_title': 'Update Proposal'})
+    existing_dates_json = json.dumps([
+        d.isoformat() for d in proposal.fiscal_year_end
+    ]) if proposal.fiscal_year_end else "[]"
+
+    return render(request, 'proposal/proposal_form.html', {
+        'form': form, 
+        'form_title': 'Update Proposal',
+        'existing_dates_json': existing_dates_json,
+    })
 
 def create_proposal(request):
     if request.method == "POST":
         form = ProposalForm(request.POST)
         
         if form.is_valid():
+
+            # 1. Get JSON string from hidden input
+            raw = form.cleaned_data.get("fiscal_year_end_data", "[]")
+
+            # 2. Convert JSON → Python list of strings
+            try:
+                date_strings = json.loads(raw)
+            except json.JSONDecodeError:
+                date_strings = []
+
+            # 3. Convert strings → actual Python date objects
+            converted_dates = []
+            for d in date_strings:
+                try:
+                    converted_dates.append(datetime.date.fromisoformat(d))
+                except Exception:
+                    pass  # ignore invalid dates
+
+            # 4. Assign to the model’s ArrayField
+            form.instance.fiscal_year_end = converted_dates
 
             # Recalculate total fee server-side to ensure integrity
             base_fee = int(form.cleaned_data['base_fee'])

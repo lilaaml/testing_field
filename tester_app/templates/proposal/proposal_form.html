@@ -15,6 +15,27 @@
         {{ form.audit_type }}
     </div>
 
+    <!-- This holds the final JSON array -->
+    <input type="hidden" id="fiscal_year_end_data" name="fiscal_year_end_data">
+
+    <h3 class="mt-4">Fiscal Year End</h3>
+    <div id="fiscal-year-end-fields" class="d-flex flex-column gap-2">
+        <!-- Default one input -->
+        <div class="fiscal-year-end-row d-flex gap-2">
+            <input type="date" class="fiscal-year-end-input form-control">
+            <button type="button" class="btn btn-outline-danger delete-btn">
+                <i class="bi bi-trash"></i>
+            </button>
+        </div>
+    </div>
+
+    <button type="button" id="add-fiscal-year-end" class="btn btn-outline-secondary mt-2 mb-3">
+        <i class="bi bi-plus-lg"></i> Add another fiscal year end
+    </button>
+
+    <!-- Error message display -->
+    <p id="fiscal-year-end-error" class="text-danger mt-2 d-none"></p>
+
     <!-- Visible Fee Input -->
     <div class="mb-3">
         <label for="base_fee" class="form-label">Base Fee</label>
@@ -74,6 +95,81 @@
 </script>
 
 <script>
+    var dateArray = {{ existing_dates_json|default:"[]"|safe }};
+</script>
+
+<script>
+    // ----- Fiscal Year End -----
+    const wrapper = document.getElementById("fiscal-year-end-fields");
+    const addBtn = document.getElementById("add-fiscal-year-end");
+    const hiddenField = document.getElementById("fiscal_year_end_data");
+    const errorBox = document.getElementById("fiscal-year-end-error");
+
+    // Initialize hidden field with existing dates
+    hiddenField.value = JSON.stringify(dateArray);
+
+    function renderFiscalYearEndFields(dates) {
+        wrapper.innerHTML = ""; // clear UI
+
+        dates.forEach((value, index) => {
+            const row = document.createElement("div");
+            row.classList.add("d-flex", "align-items-center", "mb-2", "gap-2");
+
+            row.innerHTML = `
+                <input 
+                    type="date"
+                    class="form-control fiscal-input"
+                    value="${value}"
+                    style="max-width: 180px;"
+                >
+                <button type="button" class="btn btn-outline-danger btn-sm remove-fye">&times;</button>
+            `;
+
+            wrapper.appendChild(row);
+
+            // Remove button
+            row.querySelector(".remove-fye").addEventListener("click", function () {
+                dates.splice(index, 1);
+                renderFiscalYearEndFields(dates);
+                hiddenField.value = JSON.stringify(dates);
+            });
+        });
+
+        // Sync hidden field after rendering
+        hiddenField.value = JSON.stringify(dates);
+    }
+
+    addBtn.addEventListener("click", function () {
+        dateArray.push("");
+        renderFiscalYearEndFields(dateArray);
+    });
+
+    // Function to add a new row
+    function addRow(value = "") {
+        const row = document.createElement("div");
+        row.className = "fiscal-year-end-row input-group fade-in";
+
+        row.innerHTML = `
+            <input type="date" class="fiscal-year-end-input form-control" value="${value}">
+            <button type="button" class="delete-btn btn btn-outline-danger">
+                <i class="bi bi-trash"></i>
+            </button>
+        `;
+
+        wrapper.appendChild(row);
+
+        // Delete handler
+        row.querySelector(".delete-btn").addEventListener("click", () => {
+            row.remove();
+        });
+    }
+
+    // Add row button
+    addBtn.addEventListener("click", () => {
+        addRow();
+    });
+
+    // ----- Termin -----
     const defaults = JSON.parse(document.getElementById("default-termin-opt").textContent);
 
     const form = document.getElementById("proposalForm");
@@ -102,6 +198,10 @@
     let inputElements = [];
     let totalDisplay;
     let warning;
+
+    document.addEventListener("DOMContentLoaded", function () {
+        renderFiscalYearEndFields(dateArray);
+    });
 
     // Base Fee Input Handling
     baseFeeVisible.addEventListener("input", () => {
@@ -321,8 +421,48 @@
 
     // Submit Validation
     form.addEventListener("submit", e => {
+        const inputs = document.querySelectorAll(".fiscal-year-end-input");
+
         const base = baseFeeHidden.value;
         const total = totalPercentageHidden.value;
+    
+        const values = [];
+        let hasError = false;
+        const duplicateCheck = new Set();
+
+        inputs.forEach(input => {
+            input.classList.remove("is-invalid");
+            const val = input.value.trim();
+    
+            // Empty value → error
+            if (val === "") {
+                input.classList.add("is-invalid");
+                hasError = true;
+            }
+    
+            // Duplicate detection
+            if (duplicateCheck.has(val.toLowerCase())) {
+                input.classList.add("is-invalid");
+                hasError = true;
+            } else if (val !== "") {
+                duplicateCheck.add(val.toLowerCase());
+            }
+    
+            if (val !== "") {
+                values.push(val);
+            }
+        });
+    
+        if (hasError) {
+            e.preventDefault();
+            errorBox.classList.remove("d-none");
+            errorBox.textContent = "Fix errors: remove empty fiscal year end and duplicates.";
+            return;
+        }
+    
+        errorBox.classList.add("d-none");
+    
+        hiddenField.value = JSON.stringify(values);
 
         if (!base) {
             e.preventDefault();
@@ -335,6 +475,7 @@
             alert("Total percentage must be exactly 100%");
             return;
         }
+
     });
 
 </script>

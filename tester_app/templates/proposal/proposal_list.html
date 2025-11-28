@@ -24,7 +24,15 @@
                     <tr>
                         <td>{{ proposal.client }}</td>
                         <td>{{ proposal.audit_type }}</td>
-                        <td>{{ proposal.fiscal_year_end }}</td>
+                        <td>
+                            {% if proposal.fiscal_year_end %}
+                                {% for d in proposal.fiscal_year_end %}
+                                    <span class="badge bg-primary">{{ d|date:"d-m-Y" }}</span>
+                                {% endfor %}
+                            {% else %}
+                                <span class="text-muted">No fiscal year set</span>
+                            {% endif %}
+                        </td>
 
                         <td class="text-center">
                             <a href="{% url 'update_proposal' proposal.id %}" class="btn btn-sm btn-outline-primary me-1">

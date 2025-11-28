@@ -59,6 +59,9 @@ class ClientForm(forms.ModelForm):
 
         
 class ProposalForm(forms.ModelForm):
+    # Hidden field to receive the final combined list
+    fiscal_year_end_data = forms.CharField(widget=forms.HiddenInput(), required=False)
+
     class Meta:
         model = Proposal
         fields = ['client', 'audit_type', 'fiscal_year_end', 'base_fee', 'assistance_fee', 'ope_fee', 'total_fee', 'termin_fee', 'num_termins', 'termin_values', 'total_percentage']
@@ -106,3 +109,23 @@ class ProposalForm(forms.ModelForm):
             }),
         }
 
+    def clean(self):
+        cleaned = super().clean()
+
+        raw = cleaned.get('fiscal_year_end_data', '')
+
+        # Convert JSON string → list
+        try:
+            fiscal_year_end = json.loads(raw)
+        except:
+            fiscal_year_end = []
+
+        cleaned['fiscal_year_end'] = fiscal_year_end
+        return cleaned
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        instance.fiscal_year_end = self.cleaned_data['fiscal_year_end']
+        if commit:
+            instance.save()
+        return instance
