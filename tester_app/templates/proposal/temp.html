@@ -1,0 +1,60 @@
+<script>
+    // Submit Validation
+    form.addEventListener("submit", e => {
+        const inputs = document.querySelectorAll(".fiscal-year-end-input");
+
+        const base = baseFeeHidden.value;
+        const total = totalPercentageHidden.value;
+    
+        const values = [];
+        let hasError = false;
+        const duplicateCheck = new Set();
+
+        inputs.forEach(input => {
+            input.classList.remove("is-invalid");
+            const val = input.value.trim();
+    
+            // Empty value → error
+            if (val === "") {
+                input.classList.add("is-invalid");
+                hasError = true;
+            }
+    
+            // Duplicate detection
+            if (duplicateCheck.has(val.toLowerCase())) {
+                input.classList.add("is-invalid");
+                hasError = true;
+            } else if (val !== "") {
+                duplicateCheck.add(val.toLowerCase());
+            }
+    
+            if (val !== "") {
+                values.push(val);
+            }
+        });
+    
+        if (hasError) {
+            e.preventDefault();
+            errorBox.classList.remove("d-none");
+            errorBox.textContent = "Fix errors: remove empty fiscal year end and duplicates.";
+            return;
+        }
+    
+        errorBox.classList.add("d-none");
+    
+        hiddenField.value = JSON.stringify(values);
+
+        if (!base) {
+            e.preventDefault();
+            alert("Please enter a valid base fee");
+            return;
+        }
+
+        if (total != 100) {
+            e.preventDefault();
+            alert("Total percentage must be exactly 100%");
+            return;
+        }
+
+    });
+</script>
