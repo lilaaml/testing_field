@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
+{% load currency_filters %}
 
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h2>Proposals</h2>
@@ -15,6 +16,7 @@
                 <tr>
                     <th>Client</th>
                     <th>Audit Type</th>
+                    <th>Base Fee</th>
                     <th>Fiscal Year End</th>
                     <th class="text-center">Actions</th>
                 </tr>
@@ -24,6 +26,7 @@
                     <tr>
                         <td>{{ proposal.client }}</td>
                         <td>{{ proposal.audit_type }}</td>
+                        <td>{{ proposal.base_fee|rupiah }}</td>
                         <td>
                             {% if proposal.fiscal_year_end %}
                                 {% for d in proposal.fiscal_year_end %}

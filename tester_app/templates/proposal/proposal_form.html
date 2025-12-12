@@ -86,16 +86,16 @@
 </form>
 
 <!-- Termin Options -->
+<script>
+    var dateArray = {{ existing_dates_json|default:"[]"|safe }};
+</script>
+
 <script id="default-termin-opt" type="application/json">
     {
         "2": [50, 50],
         "3": [30, 40, 30],
         "4": [null, null, null, null]
     }
-</script>
-
-<script>
-    var dateArray = {{ existing_dates_json|default:"[]"|safe }};
 </script>
 
 <script>
@@ -400,6 +400,11 @@
 
         terminFeeHidden.value = Math.round(finalTotal);
     }
+
+    // Auto-fill on update
+    document.addEventListener("DOMContentLoaded", function() {
+        
+    });
 
     // Submit Validation
     form.addEventListener("submit", e => {
