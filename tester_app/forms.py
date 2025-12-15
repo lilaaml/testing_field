@@ -1,5 +1,5 @@
 from django import forms
-from .models import Client, Proposal
+from .models import Client, Proposal, Temp
 import json
 
 class ClientForm(forms.ModelForm):
@@ -126,6 +126,44 @@ class ProposalForm(forms.ModelForm):
     def save(self, commit=True):
         instance = super().save(commit=False)
         instance.fiscal_year_end = self.cleaned_data['fiscal_year_end']
+        if commit:
+            instance.save()
+        return instance
+
+class TempForm(forms.ModelForm):
+    temp_date = forms.CharField(widget=forms.HiddenInput(), required=False)
+
+    class Meta:
+        model = Temp
+        fields = ['temp_id', 'temp_select', 'temp_date']
+        widgets = {
+            'temp_id': forms.TextInput(attrs={
+                'id': 'temp_id',
+                'class': 'form-select',
+            }),
+            'temp_select': forms.Select(attrs={
+                'id': 'temp_select',
+                'class': 'form-select',
+            }),
+        }
+
+    def clean(self):
+        cleaned = super().clean()
+
+        raw = cleaned.get('temp_date', '')
+
+        # Convert JSON string → list
+        try:
+            temp_date = json.loads(raw)
+        except:
+            temp_date = []
+
+        cleaned['temp_date'] = temp_date
+        return cleaned
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        instance.temp_date = self.cleaned_data['temp_date']
         if commit:
             instance.save()
         return instance

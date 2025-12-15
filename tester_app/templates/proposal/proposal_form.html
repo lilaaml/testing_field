@@ -2,7 +2,7 @@
 {% block content %}
 
 <h3 class="fw-bold">{{ form_title }}</h3>
-<form id="proposalForm" method="post" class="my-3">
+<form method="post" id="proposalForm" class="my-3">
     {% csrf_token %}
     {{ form.non_field_errors }}
 
@@ -15,60 +15,52 @@
         {{ form.audit_type }}
     </div>
 
-    <!-- This holds the final JSON array -->
-    <input type="hidden" id="fiscal_year_end_data" name="fiscal_year_end_data">
+    <input type="hidden" name="fye_data" id="fye-data">
 
     <h3 class="mt-4">Fiscal Year End</h3>
-    <div id="fiscal-year-end-fields" class="d-flex flex-column gap-2">
-        <!-- Default one input -->
-        <div class="fiscal-year-end-row d-flex gap-2">
-            <input type="date" class="fiscal-year-end-input form-control">
+    <div id="fye-fields" class="d-flex flex-column gap-2">
+        <div class="fye-row d-flex gap-2">
+            <input type="date" class="fye-input form-control">
             <button type="button" class="btn btn-outline-danger delete-btn">
                 <i class="bi bi-trash"></i>
             </button>
         </div>
     </div>
 
-    <button type="button" id="add-fiscal-year-end" class="btn btn-outline-secondary mt-2 mb-3">
-        <i class="bi bi-plus-lg"></i> Add another fiscal year end
+    <button type="button" id="add-fye" class="btn btn-outline-secondary mt-2 mb-3">
+        <i class="bi bi-plus-lg"></i> Tambah Tahun Buku
     </button>
 
-    <!-- Error message display -->
-    <p id="fiscal-year-end-error" class="text-danger mt-2 d-none"></p>
-
-    <!-- Visible Fee Input -->
-    <div class="mb-3">
-        <label for="base_fee" class="form-label">Base Fee</label>
-        <input type="text" name="base_fee" id="base_fee_input" class="form-control" required>
-    </div>
+    <p id="fye-error" class="text-danger mt-2 d-none"></p>
 
     <div class="mb-3">
-        <label for="assistance_fee" class="form-label">IPO Assistance Fee</label>
-        <input type="text" name="assistance_fee" id="assistance_fee_input" class="form-control">
+        <label for="base" class="form-label">Base Fee</label>
+        <input type="text" name="base" id="base-input" class="form-control" required>
     </div>
-
     <div class="mb-3">
-        <label for="ope_fee" class="form-label">Out of Pocket Expense</label>
-        <input type="text" name="ope_fee" id="ope_fee_input" class="form-control">
+        <label for="assist" class="form-label">Base Fee</label>
+        <input type="text" name="assist" id="assist-input" class="form-control">
+    </div>
+    <div class="mb-3">
+        <label for="ope" class="form-label">Base Fee</label>
+        <input type="text" name="ope" id="ope-input" class="form-control">
     </div>
 
-    <!-- Hidden Fee Fields -->
     {{ form.base_fee }}
     {{ form.assistance_fee }}
     {{ form.ope_fee }}
 
-    <!-- Visible Termin Input -->
     <div class="mb-3">
-        <label class="form-label">Number of Termins</label>
-        <select id="termin-count" class="form-select" required>
-            <option value="">-- Select --</option>
-            <option value="2">2 Termins</option>
-            <option value="3">3 Termins</option>
-            <option value="4">4 Termins</option>
-        </select>
+        <label class="form-label">Jumlah Termin</label>
+        <select id="termin-count" class="form-select">
+            <option value="">--- Pilih ---</option>
+            <option value="2">Dua Termin</option>
+            <option value="3">Tiga Termin</option>
+            <option value="4">Empat Termin</option>    
+        </select required>
+            
     </div>
 
-    <!-- Hidden Termin Fields -->
     {{ form.num_termins }}
     {{ form.termin_values }}
     {{ form.total_percentage }}
@@ -81,192 +73,92 @@
 
     <div class="d-flex gap-2 mt-3">
         <button type="submit" class="btn btn-primary flex-fill">Save</button>
-        <a href="{% url 'proposal_list' %}" class="btn btn-secondary flex-fill">Cancel</a>
+        <a href="#" class="btn btn-secondary flex-fill">Cancel</a>
     </div>
 </form>
 
-<!-- Termin Options -->
 <script>
-    var dateArray = {{ existing_dates_json|default:"[]"|safe }};
+    var dateArray = {{ existing_dates_json|default:"[]"|safe }}
 </script>
 
 <script id="default-termin-opt" type="application/json">
     {
         "2": [50, 50],
         "3": [30, 40, 30],
-        "4": [null, null, null, null]
+        "4": [null, null, null, null],
     }
 </script>
 
 <script>
-    // ----- Fiscal Year End -----
-    const wrapper = document.getElementById("fiscal-year-end-fields");
-    const addBtn = document.getElementById("add-fiscal-year-end");
-    const hiddenField = document.getElementById("fiscal_year_end_data");
-    const errorBox = document.getElementById("fiscal-year-end-error");
-
-    // Ensure hidden field starts with correct data
-    hiddenField.value = JSON.stringify(dateArray);
-
-    // --- Single renderer (auto-fill + add + delete) ---
-    function renderFiscalYearEndFields(dates) {
-        wrapper.innerHTML = ""; // Clear UI
-
-        dates.forEach((value, index) => {
-            const row = document.createElement("div");
-            row.className = "d-flex align-items-center gap-2 mb-2";
-
-            row.innerHTML = `
-                <input 
-                    type="date"
-                    class="form-control fiscal-year-end-input"
-                    value="${value}"
-                    style="max-width: 200px;"
-                >
-                <button type="button" class="btn btn-outline-danger btn-sm remove-fye">
-                    <i class="bi bi-trash"></i>
-                </button>
-            `;
-
-            wrapper.appendChild(row);
-
-            row.querySelector(".remove-fye").addEventListener("click", function () {
-                dates.splice(index, 1);
-                renderFiscalYearEndFields(dates);
-            });
-        });
-
-        hiddenField.value = JSON.stringify(dates);
-    }
-
-    // --- Add button (ONLY ONE NOW) ---
-    addBtn.addEventListener("click", function () {
-        dateArray.push("");
-        renderFiscalYearEndFields(dateArray);
-    });
-
-    // --- Auto-fill on update ---
-    document.addEventListener("DOMContentLoaded", function () {
-        renderFiscalYearEndFields(dateArray);
-    });
-
-    // ----- Termin -----
-    const defaults = JSON.parse(document.getElementById("default-termin-opt").textContent);
-
     const form = document.getElementById("proposalForm");
-    const baseFeeVisible = document.getElementById("base_fee_input");
-    const assistanceFeeVisible = document.getElementById("assistance_fee_input");
-    const opeFeeVisible = document.getElementById("ope_fee_input");
 
-    const baseFeeHidden = document.getElementById("base_fee");
-    const assistanceFeeHidden = document.getElementById("assistance_fee");
-    const opeFeeHidden = document.getElementById("ope_fee");
+    const fyeWrapper = document.getElementById("fye-fields");
+    const addFye = document.getElementById("add-fye");
+    const hiddenFye = document.getElementById("fye-data");
+    const errorFye = document.getElementById("fye-error");
 
+    const terminDefaults = JSON.parse(document.getElementById("default-termin-opt").textContent);
+    // Visible Fee
+    const baseVisible = document.getElementById("base-input");
+    const assistVisible = document.getElementById("assist-input");
+    const opeVisible = document.getElementById("ope-input");
+    // Hidden Fee
+    const baseHidden = document.getElementById("base_fee");
+    const assistHidden = document.getElementById("assistance_fee");
+    const opeHidden = document.getElementById("ope_fee");
+    // Termin
     const terminSelect = document.getElementById("termin-count");
     const container = document.getElementById("termin-container");
-
     const numTerminsHidden = document.getElementById("num_termins");
-    const terminValuesHidden = document.getElementById("termin_values");
-    const totalPercentageHidden = document.getElementById("total_percentage");
+    const terminValHidden = document.getElementById("termin_values");
+    const totalPercentHidden = document.getElementById("total_percentage");
     const totalFeeHidden = document.getElementById("total_fee");
     const terminFeeHidden = document.getElementById("termin_fee");
-
-    const idrFormatter = new Intl.NumberFormat("id-ID", {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
-    });
 
     let inputElements = [];
     let totalDisplay;
     let warning;
 
-    // --- Auto-fill on update ---
-    document.addEventListener("DOMContentLoaded", function () {
-        renderTerminFields(terminArray);
+    // Check if hidden field store the correct data
+    hiddenFye.value = JSON.stringify(dateArray);
+
+    // Auto-fill + Add + Delete (FYE)
+    function renderFye(dates) {
+        fyeWrapper.innerHTML = ""; // Clear UI
+
+        dates.forEach((val, i) => {
+            const row = document.createElement("div");
+            row.className = "d-flex align-items-center gap-2 mb-2";
+
+            row.innerHTML =
+                `<input
+                    type="date"
+                    class="form-control fye-input"
+                    value="${val}"
+                    style="max=width: 200px;"
+                >
+                <button type="button"
+                class="btn btn-outline-danger btn-sm remove-fye>
+                    <i class="bi bit-trash"></i>
+                </button>
+            `;
+
+            fyeWrapper.appendChild(row);
+
+            row.querySelector(".remove-fye").addEventListener("click", function() {
+                dates.splice(i, 1);
+                renderFye(dates);
+            });
+        });
+
+        hiddenFye.value = JSON.stringify(dates);
+    }
+
+    addFye.addEventListener("click", function() {
+        dateArray.push("");
+        renderFye(dateArray);
     });
 
-    // Base Fee Input Handling
-    baseFeeVisible.addEventListener("input", () => {
-        let raw = baseFeeVisible.value.replace(/\D/g, "");
-        if (raw.length > 9) raw = raw.slice(0, 9);
-
-        baseFeeVisible.value = raw;
-        baseFeeHidden.value = raw;
-
-        updateCalculations();
-    });
-
-    baseFeeVisible.addEventListener("blur", () => {
-        let raw = baseFeeVisible.value.replace(/\D/g, "");
-        if (!raw) return;
-
-        let baseFee = parseInt(raw, 10);
-        if (baseFee > 1000000000) {
-            alert("Maximum is Rp 1.000.000.000");
-            baseFee = 1000000000;
-        }
-
-        baseFeeVisible.value = idrFormatter.format(baseFee);
-        baseFeeHidden.value = baseFee;
-
-        updateCalculations();
-    });
-
-    // Assistance Fee Input Handling
-    assistanceFeeVisible.addEventListener("input", () => {
-        let raw = assistanceFeeVisible.value.replace(/\D/g, "");
-        if (raw.length > 9) raw = raw.slice(0, 9);
-
-        assistanceFeeVisible.value = raw;
-        assistanceFeeHidden.value = raw;
-
-        updateCalculations();
-    });
-    
-    assistanceFeeVisible.addEventListener("blur", () => {
-        let raw = assistanceFeeVisible.value.replace(/\D/g, "");
-        if (!raw) return;
-
-        let assistanceFee = parseInt(raw, 10);
-        if (assistanceFee > 1000000000) {
-            alert("Maximum is Rp 1.000.000.000");
-            assistanceFee = 1000000000;
-        }
-
-        assistanceFeeVisible.value = idrFormatter.format(assistanceFee);
-        assistanceFeeHidden.value = assistanceFee;
-
-        updateCalculations();
-    });
-
-    // OPE Fee Input Handling
-    opeFeeVisible.addEventListener("input", () => {
-        let raw = opeFeeVisible.value.replace(/\D/g, "");
-        if (raw.length > 9) raw = raw.slice(0, 9);
-
-        opeFeeVisible.value = raw;
-        opeFeeHidden.value = raw;
-
-        updateCalculations();
-    });
-    
-    opeFeeVisible.addEventListener("blur", () => {
-        let raw = opeFeeVisible.value.replace(/\D/g, "");
-        if (!raw) return;
-
-        let opeFee = parseInt(raw, 10);
-        if (opeFee > 1000000000) {
-            alert("Maximum is Rp 1.000.000.000");
-            opeFee = 1000000000;
-        }
-
-        opeFeeVisible.value = idrFormatter.format(opeFee);
-        opeFeeHidden.value = opeFee;
-
-        updateCalculations();
-    });
-
-    // Termin Table
     terminSelect.addEventListener("change", () => {
         const num = parseInt(terminSelect.value);
         container.innerHTML = "";
@@ -278,7 +170,7 @@
         }
 
         numTerminsHidden.value = num;
-        const values = defaults[num];
+        const val = defaults[num];
 
         totalDisplay = document.createElement("p");
         totalDisplay.classList.add("fw-bold", "mt-3");
@@ -306,7 +198,7 @@
 
         const tbody = document.createElement("tbody");
 
-        values.forEach((v, i) => {
+        val.forEach((v, i) => {
             const tr = document.createElement("tr");
 
             const nameCell = `<td class="fw-semibold">Termin ${i+1}</td>`;
@@ -350,12 +242,11 @@
         updateCalculations();
     });
 
-    // Percent Total Calculator
     function updateTotals() {
         const total = inputElements.reduce((sum, el) => sum + Number(el.input.value || 0), 0);
 
         totalDisplay.textContent = `Total: ${total}%`;
-        terminValuesHidden.value = JSON.stringify(inputElements.map(el => Number(el.input.value || 0)));
+        terminValHidden.value = JSON.stringify(inputElements.map(el => Number(el.input.value || 0)));
         totalPercentageHidden.value = total;
 
         if (total > 100) {
@@ -374,12 +265,12 @@
 
     // Fee Calculation
     function updateCalculations() {
-        const baseFee = parseInt(baseFeeHidden.value || 0);
-        const assistanceFee = parseInt(assistanceFeeHidden.value || 0);
-        const opeFee = parseInt(opeFeeHidden.value || 0);
-        const total = parseInt(totalPercentageHidden.value || 0);
+        const base = parseInt(baseHidden.value || 0);
+        const assist = parseInt(assistHidden.value || 0);
+        const ope = parseInt(opeHidden.value || 0);
+        const total = parseInt(totalPercentHidden.value || 0);
 
-        if(!baseFee || total !== 100) {
+        if (!base || total !== 100) {
             inputElements.forEach(el => {
                 el.totalFeeCell.textContent = "Rp 0";
             })
@@ -401,70 +292,52 @@
         terminFeeHidden.value = Math.round(finalTotal);
     }
 
-    // Auto-fill on update
+    // Update (Auto-fill): FYE & Termin
     document.addEventListener("DOMContentLoaded", function() {
-        
+        renderFye(dateArray);
     });
 
-    // Submit Validation
+    // Submit Validation: FYE & Termin
     form.addEventListener("submit", e => {
-        const inputs = document.querySelectorAll(".fiscal-year-end-input");
+        const fyeInputs = document.querySelectorAll("fye-input");
 
-        const base = baseFeeHidden.value;
-        const total = totalPercentageHidden.value;
-    
         const values = [];
         let hasError = false;
         const duplicateCheck = new Set();
 
-        inputs.forEach(input => {
+        fyeInputs.forEach(input => {
             input.classList.remove("is-invalid");
             const val = input.value.trim();
-    
-            // Empty value → error
-            if (val === "") {
+
+            // Check for empty value(s)
+            if (val === "" ) {
                 input.classList.add("is-invalid");
-                hasError = true;
             }
-    
-            // Duplicate detection
+
+            // Check for duplicates
             if (duplicateCheck.has(val.toLowerCase())) {
                 input.classList.add("is-invalid");
                 hasError = true;
-            } else if (val !== "") {
+            } else if(val !== "") {
                 duplicateCheck.add(val.toLowerCase());
             }
-    
-            if (val !== "") {
+
+            if (val != "") {
                 values.push(val);
             }
         });
-    
+
         if (hasError) {
             e.preventDefault();
-            errorBox.classList.remove("d-none");
-            errorBox.textContent = "Fix errors: remove empty fiscal year end and duplicates.";
-            return;
-        }
-    
-        errorBox.classList.add("d-none");
-    
-        hiddenField.value = JSON.stringify(values);
-
-        if (!base) {
-            e.preventDefault();
-            alert("Please enter a valid base fee");
+            errorFye.classList.remove("d-none");
+            errorFye.textContent = "Error: hapus tahun buku kosong dan duplikat.";
             return;
         }
 
-        if (total != 100) {
-            e.preventDefault();
-            alert("Total percentage must be exactly 100%");
-            return;
-        }
+        errorFye.classList.add("d-none");
 
+        hiddenFye.value = JSON.stringify(values);
     });
-
 </script>
 
 {% endblock %}

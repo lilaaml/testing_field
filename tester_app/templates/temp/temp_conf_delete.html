@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="content">
+    <h2>Hapus Temp</h2>
+    <p>Apakah anda yakin ingin menghapus <strong>{{ temp.temp_id }} {{ temp.temp_select }}</strong>?</p>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Ya, hapus</button>
+        <a href="{% url 'temp_list' %}" class="btn btn-secondary">Batal</a>
+    </form>
+</div>
+{% endblock %}

@@ -14,4 +14,9 @@ urlpatterns = [
     path('client-list/', views.client_list, name='client_list'),
     path('client/<int:pk>/update', views.update_client, name='update_client'),
     path('client/<int:pk>/delete/', views.delete_client, name='delete_client'),
+    # Temp (Testing Field)
+    path('temp/temp-create', views.temp_create, name='temp_create'),
+    path('temp/<int:pk>/temp-update', views.temp_update, name='temp_update'),
+    path('temp/<int:pk>/temp-delete', views.temp_delete, name='temp_delete'),
+    path('temp/temp-list', views.temp_list, name='temp_list'),
 ]

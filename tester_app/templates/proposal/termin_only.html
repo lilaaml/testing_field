@@ -105,16 +105,13 @@
     const assistHidden = document.getElementById("assistance_fee");
     const opeHidden = document.getElementById("ope_fee");
     // Termin
+    const terminSelect = document.getElementById("termin-count");
+    const container = document.getElementById("termin-container");
     const numTerminsHidden = document.getElementById("num_termins");
     const terminValHidden = document.getElementById("termin_values");
     const totalPercentHidden = document.getElementById("total_percentage");
     const totalFeeHidden = document.getElementById("total_fee");
     const terminFeeHidden = document.getElementById("termin_fee");
-
-    const idrFormatter = new Intl.NumberFormat("id-ID", {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
-    });
 
     let inputElements = [];
     let totalDisplay;
@@ -160,6 +157,139 @@
         renderFye(dateArray);
     });
 
+    terminSelect.addEventListener("change", () => {
+        const num = parseInt(terminSelect.value);
+        container.innerHTML = "";
+        inputElements = [];
+
+        if (!num) {
+            numTerminsHidden.value = "";
+            return;
+        }
+
+        numTerminsHidden.value = num;
+        const val = defaults[num];
+
+        totalDisplay = document.createElement("p");
+        totalDisplay.classList.add("fw-bold", "mt-3");
+        totalDisplay.textContent = "Total: 0%";
+
+        warning = document.createElement("div");
+        warning.classList.add("alert", "alert-warning", "mt-2");
+        warning.style.display = "none";
+
+        container.appendChild(totalDisplay);
+
+        const table = document.createElement("table");
+        table.classList.add("table", "table-bordered", "text-center", "termin-table", "mt-2");
+
+        table.innerHTML = `
+            <thead class="table-primary">
+                <tr>
+                    <th>Termins</th>
+                    <th>%</th>
+                    <th>Total</th>
+                    <th>Per Termin</th>
+                </tr>
+            </thead>
+        `;
+
+        const tbody = document.createElement("tbody");
+
+        val.forEach((v, i) => {
+            const tr = document.createElement("tr");
+
+            const nameCell = `<td class="fw-semibold">Termin ${i+1}</td>`;
+
+            const percentInput = document.createElement("input");
+            percentInput.type = "number";
+            percentInput.classList.add("form-control", "text-center", "mx-auto");
+            percentInput.style.maxWidth = "90px";
+            percentInput.value = v ?? "";
+            percentInput.placeholder = v ?? "Custom";
+
+            const percentCell = document.createElement("td");
+            percentCell.appendChild(percentInput);
+
+            const totalFeeCell = document.createElement("td");
+            const terminFeeCell = document.createElement("td");
+
+            totalFeeCell.textContent = "Rp 0";
+            terminFeeCell.textContent = "Rp 0";
+
+            tr.innerHTML = nameCell;
+            tr.appendChild(percentCell);
+            tr.appendChild(totalFeeCell);
+            tr.appendChild(terminFeeCell);
+
+            tbody.appendChild(tr);
+
+            inputElements.push({ input: percentInput, totalFeeCell, terminFeeCell });
+
+            percentInput.addEventListener("input", () => {
+                updateTotals();
+                updateCalculations();
+            });
+        });
+
+        table.appendChild(tbody);
+        container.appendChild(table);
+        container.appendChild(warning);
+
+        updateTotals();
+        updateCalculations();
+    });
+
+    function updateTotals() {
+        const total = inputElements.reduce((sum, el) => sum + Number(el.input.value || 0), 0);
+
+        totalDisplay.textContent = `Total: ${total}%`;
+        terminValHidden.value = JSON.stringify(inputElements.map(el => Number(el.input.value || 0)));
+        totalPercentageHidden.value = total;
+
+        if (total > 100) {
+            warning.textContent = "Persentase tidak bisa melebihi 100%";
+            warning.style.display = "block";
+            totalDisplay.style.color = "red";
+        } else if (total < 100) {
+            warning.textContent = "Persentase harus mencapai 100%";
+            warning.style.display = "block";
+            totalDisplay.style.color = "orange";
+        } else {
+            warning.style.display = "none";
+            totalDisplay.style.color = "black";
+        }
+    }
+
+    // Fee Calculation
+    function updateCalculations() {
+        const base = parseInt(baseHidden.value || 0);
+        const assist = parseInt(assistHidden.value || 0);
+        const ope = parseInt(opeHidden.value || 0);
+        const total = parseInt(totalPercentHidden.value || 0);
+
+        if(!base || total !== 100) {
+            inputElements.forEach(el => {
+                el.totalFeeCell.textContent = "Rp 0";
+            });
+        }
+
+        let finalTotal = 0;
+
+        inputElements.forEach(el => {
+            const percent = Number(el.input.value || 0);
+            const sub = baseFee + assistanceFee + opeFee;
+            const total = sub * (percent / 100);
+
+            el.totalFeeCell.textContent = "Rp " + idrFormatter.format(sub);
+            el.terminFeeCell.textContent = "Rp " + idrFormatter.format(total);
+
+            finalTotal += total;
+        });
+
+        terminFeeHidden.value = Math.round(finalTotal);
+    }
+
     // Update (Auto-fill): FYE & Termin
     document.addEventListener("DOMContentLoaded", function() {
         renderFye(dateArray);
@@ -178,24 +308,24 @@
             const val = input.value.trim();
 
             // Check for empty value(s)
-            if(val === "" ) {
+            if (val === "" ) {
                 input.classList.add("is-invalid");
             }
 
             // Check for duplicates
-            if(duplicateCheck.has(val.toLowerCase())) {
+            if (duplicateCheck.has(val.toLowerCase())) {
                 input.classList.add("is-invalid");
                 hasError = true;
             } else if(val !== "") {
                 duplicateCheck.add(val.toLowerCase());
             }
 
-            if(val != "") {
+            if (val != "") {
                 values.push(val);
             }
         });
 
-        if(hasError) {
+        if (hasError) {
             e.preventDefault();
             errorFye.classList.remove("d-none");
             errorFye.textContent = "Error: hapus tahun buku kosong dan duplikat.";

@@ -49,3 +49,22 @@ class Proposal(models.Model):
 
     def __str__(self):
         return f"{ self.proposal_id }"
+    
+class Temp(models.Model):
+    temp_id = models.CharField(max_length=255)
+    temp_select = models.CharField(
+        max_length=255,
+        choices=[
+            ('Choice 1', 'Choice 1'),
+            ('Choice 2', 'Choice 2'),
+            ('Choice 3', 'Choice 3'),
+        ]
+    )
+    temp_date = ArrayField(
+        models.DateField(),
+        default=list,
+        blank=True
+    )
+
+    def __str__(self):
+        return f"{ self.proposal_id }"

@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<h3 class="fw-bold">{{ form_title }}</h3>
+<form method="POST" id="tempForm" class="my-3">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+
+    <div class="mb-3">
+        {{ form.temp_id.label_tag }}
+        {{ form.temp_id }}
+    </div>
+
+    <div class="mb-3">
+        {{ form.temp_select.label_tag }}
+        {{ form.temp_select }}
+    </div>
+
+    <!-- This holds the final JSON array -->
+    <input type="hidden" id="temp-date" name="temp_date">
+
+    <h3 class="mt-4">Temp Date</h3>
+    <div id="temp-date-field" class="d-flex flex-column gap-2">
+        <!-- Default one input -->
+        <div class="temp-date-row d-flex gap-2">
+            <input type="date" class="temp-date-input form-control">
+            <button type="button" class="btn btn-outline-danger delete-btn">
+                <i class="bi bi-trash"></i>
+            </button>
+        </div>
+    </div>
+
+    <button type="button" id="add-temp-date" class="btn btn-outline-secondary mt-2 mb-3">
+        <i class="bi bi-plus-lg"></i> Add another fiscal year end
+    </button>
+
+    <!-- Error message display -->
+    <p id="temp-date-error" class="text-danger mt-2 d-none"></p>
+
+    <div class="d-flex gap-2 mt-3">
+        <button type="submit" class="btn btn-primary flex-fill">Save</button>
+        <a href="#" class="btn btn-secondary flex-fill">Cancel</a>
+    </div>
+</form>
+
+{% endblock %}

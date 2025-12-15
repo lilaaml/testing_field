@@ -2,8 +2,8 @@ import datetime
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib import messages
 
-from tester_app.forms import ClientForm, ProposalForm
-from tester_app.models import Client, Proposal
+from tester_app.forms import ClientForm, ProposalForm, TempForm
+from tester_app.models import Client, Proposal, Temp
 
 from .utils.formatting import smart_title
 import requests
@@ -14,6 +14,67 @@ import json
 def home(request):
     return render(request, 'home.html', {})
 
+# Temp (Testing Field)
+def temp_create(request):
+    if request.method == 'POST':
+        form = TempForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('temp_list')
+    else:
+        form = TempForm()
+    return render(request, 'temp/temp_form.html', {
+        'form': form,
+        'form_title': 'Temp: Create',
+    })
+
+def temp_update(request, pk):
+    temp = get_object_or_404(Temp, pk=pk)
+    if request.method == 'POST':
+        form = TempForm(request.POST, instance=temp)
+        if form.is_valid():
+            form.save()
+            return redirect('temp_list')
+    else:
+        form = TempForm(instance=temp)
+    
+    return render(request, 'temp/temp_form.html', {
+        'form': form,
+        'form_title': 'Temp: Update',
+    })
+
+def temp_delete(request, pk):
+    temp = get_object_or_404(Temp, pk=pk)
+    if request.method == 'POST':
+        temp.delete()
+        return redirect('temp_list')
+    return render(request, 'temp/temp_conf_delete.html', {'temp': temp})
+
+def temp_list(request):
+    temp = Temp.objects.all()
+    return render(request, 'temp/temp_list.html', {'temp': temp})
+
+# Client
+def create_client(request):
+    if request.method == 'POST':
+        form = ClientForm(request.POST)
+        if form.is_valid():
+            client = form.save(commit=False)
+            client.province = smart_title(request.POST.get("province_name", ""))
+            client.regency = smart_title(request.POST.get("regency_name", ""))
+            client.district = smart_title(request.POST.get("district_name", ""))
+            client.village = smart_title(request.POST.get("village_name", ""))
+            client.save()
+            return redirect('client_list')
+    else:
+        form = ClientForm()
+
+    client = Client.objects.all()
+    return render(request, 'client/client_form.html', {
+        'form': form, 
+        'client': client, 
+        'form_title': 'Add Client'
+    })
 
 # Proposal
 def update_proposal(request, pk):
