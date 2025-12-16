@@ -33,44 +33,6 @@
 
     <p id="fye-error" class="text-danger mt-2 d-none"></p>
 
-    <div class="mb-3">
-        <label for="base" class="form-label">Base Fee</label>
-        <input type="text" name="base" id="base-input" class="form-control" required>
-    </div>
-    <div class="mb-3">
-        <label for="assist" class="form-label">Base Fee</label>
-        <input type="text" name="assist" id="assist-input" class="form-control">
-    </div>
-    <div class="mb-3">
-        <label for="ope" class="form-label">Base Fee</label>
-        <input type="text" name="ope" id="ope-input" class="form-control">
-    </div>
-
-    {{ form.base_fee }}
-    {{ form.assistance_fee }}
-    {{ form.ope_fee }}
-
-    <div class="mb-3">
-        <label class="form-label">Jumlah Termin</label>
-        <select id="termin-count" class="form-select">
-            <option value="">--- Pilih ---</option>
-            <option value="2">Dua Termin</option>
-            <option value="3">Tiga Termin</option>
-            <option value="4">Empat Termin</option>    
-        </select required>
-            
-    </div>
-
-    {{ form.num_termins }}
-    {{ form.termin_values }}
-    {{ form.total_percentage }}
-    {{ form.total_fee }}
-    {{ form.termin_fee }}
-
-    <div id="termin-container" class="mb-3"></div>
-
-    <div id="sub-fee-display" class="mb-3"></div>
-
     <div class="d-flex gap-2 mt-3">
         <button type="submit" class="btn btn-primary flex-fill">Save</button>
         <a href="#" class="btn btn-secondary flex-fill">Cancel</a>
@@ -97,30 +59,14 @@
     const hiddenFye = document.getElementById("fye-data");
     const errorFye = document.getElementById("fye-error");
 
-    const terminDefaults = JSON.parse(document.getElementById("default-termin-opt").textContent);
-    // Visible Fee
-    const baseVisible = document.getElementById("base-input");
-    const assistVisible = document.getElementById("assist-input");
-    const opeVisible = document.getElementById("ope-input");
-    // Hidden Fee
-    const baseHidden = document.getElementById("base_fee");
-    const assistHidden = document.getElementById("assistance_fee");
-    const opeHidden = document.getElementById("ope_fee");
-    // Termin
-    const terminSelect = document.getElementById("termin-count");
-    const container = document.getElementById("termin-container");
-    const numTerminsHidden = document.getElementById("num_termins");
-    const terminValHidden = document.getElementById("termin_values");
-    const totalPercentHidden = document.getElementById("total_percentage");
-    const totalFeeHidden = document.getElementById("total_fee");
-    const terminFeeHidden = document.getElementById("termin_fee");
+    function syncFyeFromInputs() {
+        const inputs = document.querySelectorAll(".fye-input");
+        dateArray = Array.from(inputs).map(input => input.value);
+    }
 
-    let inputElements = [];
-    let totalDisplay;
-    let warning;
-
-    // Check if hidden field store the correct data
-    hiddenFye.value = JSON.stringify(dateArray);
+    fyeWrapper.addEventListener("input", () => {
+        syncFyeFromInputs();
+    });
 
     // Auto-fill + Add + Delete (FYE)
     function renderFye(dates) {
@@ -134,20 +80,23 @@
                 `<input
                     type="date"
                     class="form-control fye-input"
+                    id="fye-${i}"
                     value="${val}"
-                    style="max=width: 200px;"
                 >
-                <button type="button"
-                class="btn btn-outline-danger btn-sm remove-fye>
-                    <i class="bi bit-trash"></i>
+                <button 
+                    type="button"
+                    class="btn btn-outline-danger btn-sm remove-fye"
+                >
+                    <i class="bi bi-trash"></i>
                 </button>
             `;
 
             fyeWrapper.appendChild(row);
 
             row.querySelector(".remove-fye").addEventListener("click", function() {
-                dates.splice(i, 1);
-                renderFye(dates);
+                syncFyeFromInputs();
+                dateArray.splice(i, 1);
+                renderFye(dateArray);
             });
         });
 
@@ -155,142 +104,10 @@
     }
 
     addFye.addEventListener("click", function() {
+        syncFyeFromInputs();
         dateArray.push("");
         renderFye(dateArray);
     });
-
-    terminSelect.addEventListener("change", () => {
-        const num = parseInt(terminSelect.value);
-        container.innerHTML = "";
-        inputElements = [];
-
-        if (!num) {
-            numTerminsHidden.value = "";
-            return;
-        }
-
-        numTerminsHidden.value = num;
-        const val = defaults[num];
-
-        totalDisplay = document.createElement("p");
-        totalDisplay.classList.add("fw-bold", "mt-3");
-        totalDisplay.textContent = "Total: 0%";
-
-        warning = document.createElement("div");
-        warning.classList.add("alert", "alert-warning", "mt-2");
-        warning.style.display = "none";
-
-        container.appendChild(totalDisplay);
-
-        const table = document.createElement("table");
-        table.classList.add("table", "table-bordered", "text-center", "termin-table", "mt-2");
-
-        table.innerHTML = `
-            <thead class="table-primary">
-                <tr>
-                    <th>Termins</th>
-                    <th>%</th>
-                    <th>Total</th>
-                    <th>Per Termin</th>
-                </tr>
-            </thead>
-        `;
-
-        const tbody = document.createElement("tbody");
-
-        val.forEach((v, i) => {
-            const tr = document.createElement("tr");
-
-            const nameCell = `<td class="fw-semibold">Termin ${i+1}</td>`;
-
-            const percentInput = document.createElement("input");
-            percentInput.type = "number";
-            percentInput.classList.add("form-control", "text-center", "mx-auto");
-            percentInput.style.maxWidth = "90px";
-            percentInput.value = v ?? "";
-            percentInput.placeholder = v ?? "Custom";
-
-            const percentCell = document.createElement("td");
-            percentCell.appendChild(percentInput);
-
-            const totalFeeCell = document.createElement("td");
-            const terminFeeCell = document.createElement("td");
-
-            totalFeeCell.textContent = "Rp 0";
-            terminFeeCell.textContent = "Rp 0";
-
-            tr.innerHTML = nameCell;
-            tr.appendChild(percentCell);
-            tr.appendChild(totalFeeCell);
-            tr.appendChild(terminFeeCell);
-
-            tbody.appendChild(tr);
-
-            inputElements.push({ input: percentInput, totalFeeCell, terminFeeCell });
-
-            percentInput.addEventListener("input", () => {
-                updateTotals();
-                updateCalculations();
-            });
-        });
-
-        table.appendChild(tbody);
-        container.appendChild(table);
-        container.appendChild(warning);
-
-        updateTotals();
-        updateCalculations();
-    });
-
-    function updateTotals() {
-        const total = inputElements.reduce((sum, el) => sum + Number(el.input.value || 0), 0);
-
-        totalDisplay.textContent = `Total: ${total}%`;
-        terminValHidden.value = JSON.stringify(inputElements.map(el => Number(el.input.value || 0)));
-        totalPercentageHidden.value = total;
-
-        if (total > 100) {
-            warning.textContent = "Persentase tidak bisa melebihi 100%";
-            warning.style.display = "block";
-            totalDisplay.style.color = "red";
-        } else if (total < 100) {
-            warning.textContent = "Persentase harus mencapai 100%";
-            warning.style.display = "block";
-            totalDisplay.style.color = "orange";
-        } else {
-            warning.style.display = "none";
-            totalDisplay.style.color = "black";
-        }
-    }
-
-    // Fee Calculation
-    function updateCalculations() {
-        const base = parseInt(baseHidden.value || 0);
-        const assist = parseInt(assistHidden.value || 0);
-        const ope = parseInt(opeHidden.value || 0);
-        const total = parseInt(totalPercentHidden.value || 0);
-
-        if (!base || total !== 100) {
-            inputElements.forEach(el => {
-                el.totalFeeCell.textContent = "Rp 0";
-            })
-        }
-
-        let finalTotal = 0;
-
-        inputElements.forEach(el => {
-            const percent = Number(el.input.value || 0);
-            const sub = baseFee + assistanceFee + opeFee;
-            const total = sub * (percent / 100);
-
-            el.totalFeeCell.textContent = "Rp " + idrFormatter.format(sub);
-            el.terminFeeCell.textContent = "Rp " + idrFormatter.format(total);
-
-            finalTotal += total;
-        });
-
-        terminFeeHidden.value = Math.round(finalTotal);
-    }
 
     // Update (Auto-fill): FYE & Termin
     document.addEventListener("DOMContentLoaded", function() {
@@ -299,7 +116,9 @@
 
     // Submit Validation: FYE & Termin
     form.addEventListener("submit", e => {
-        const fyeInputs = document.querySelectorAll("fye-input");
+        e.preventDefault();
+
+        const fyeInputs = document.querySelectorAll(".fye-input");
 
         const values = [];
         let hasError = false;
@@ -335,8 +154,9 @@
         }
 
         errorFye.classList.add("d-none");
-
         hiddenFye.value = JSON.stringify(values);
+
+        form.submit();
     });
 </script>
 

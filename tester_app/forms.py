@@ -64,7 +64,7 @@ class ProposalForm(forms.ModelForm):
 
     class Meta:
         model = Proposal
-        fields = ['client', 'audit_type', 'fiscal_year_end', 'base_fee', 'assistance_fee', 'ope_fee', 'total_fee', 'termin_fee', 'num_termins', 'termin_values', 'total_percentage']
+        fields = ['client', 'audit_type', 'fiscal_year_end']
 
         widgets = {
             'client': forms.Select(attrs={
@@ -73,38 +73,6 @@ class ProposalForm(forms.ModelForm):
             }),
             'audit_type': forms.Select(attrs={
                 'id': 'audit_type',
-                'class': 'form-control',
-            }),
-            'base_fee': forms.HiddenInput(attrs={
-                'id': 'base_fee',
-                'class': 'form-control',
-            }),
-            'assistance_fee': forms.HiddenInput(attrs={
-                'id': 'assistance_fee',
-                'class': 'form-control',
-            }),
-            'ope_fee': forms.HiddenInput(attrs={
-                'id': 'ope_fee',
-                'class': 'form-control',
-            }),
-            'total_fee': forms.HiddenInput(attrs={
-                'id': 'total_fee',
-                'class': 'form-control',
-            }),
-            'termin_fee': forms.HiddenInput(attrs={
-                'id': 'termin_fee',
-                'class': 'form-control',
-            }),
-            'num_termins': forms.HiddenInput(attrs={
-                'id': 'num_termins',
-                'class': 'form-control',
-            }),
-            'termin_values': forms.HiddenInput(attrs={
-                'id': 'termin_values',
-                'class': 'form-control',
-            }),
-            'total_percentage': forms.HiddenInput(attrs={
-                'id': 'total_percentage',
                 'class': 'form-control',
             }),
         }
